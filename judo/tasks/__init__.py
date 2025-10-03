@@ -2,6 +2,7 @@
 
 from typing import Dict, Tuple, Type
 
+from judo.tasks.acrobot import Acrobot, AcrobotConfig
 from judo.tasks.base import Task, TaskConfig
 from judo.tasks.caltech_leap_cube import CaltechLeapCube, CaltechLeapCubeConfig
 from judo.tasks.cartpole import Cartpole, CartpoleConfig
@@ -11,6 +12,7 @@ from judo.tasks.leap_cube import LeapCube, LeapCubeConfig
 from judo.tasks.leap_cube_down import LeapCubeDown, LeapCubeDownConfig
 
 _registered_tasks: Dict[str, Tuple[Type[Task], Type[TaskConfig]]] = {
+    Acrobot.name: (Acrobot, AcrobotConfig),
     CylinderPush.name: (CylinderPush, CylinderPushConfig),
     Cartpole.name: (Cartpole, CartpoleConfig),
     FR3Pick.name: (FR3Pick, FR3PickConfig),
