@@ -5,17 +5,17 @@ import time
 import warnings
 
 from dora_utils.dataclasses import from_arrow, to_arrow
-from dora_utils.node import DoraNode, on_event
+from dora_utils.node import on_event
 from mujoco import mj_step
 from omegaconf import DictConfig
 
 from judo.app.structs import MujocoState, SplineData
-from judo.app.utils import register_tasks_from_cfg
+from judo.app.utils import TimedDoraNode, register_tasks_from_cfg
 from judo.tasks import get_registered_tasks
 from judo.tasks.base import Task
 
 
-class SimulationNode(DoraNode):
+class SimulationNode(TimedDoraNode):
     """The simulation node."""
 
     def __init__(
@@ -24,14 +24,16 @@ class SimulationNode(DoraNode):
         init_task: str = "cylinder_push",
         max_workers: int | None = None,
         task_registration_cfg: DictConfig | None = None,
+        profile_spin: bool = False,
     ) -> None:
         """Initialize the simulation node."""
-        super().__init__(node_id=node_id, max_workers=max_workers)
+        super().__init__(node_id=node_id, max_workers=max_workers, node_name="sim")
 
         # handling custom task registration
         if task_registration_cfg is not None:
             register_tasks_from_cfg(task_registration_cfg)
 
+        self.profile_spin = profile_spin
         self.task_reset_lock = threading.Lock()
         self.config_lock = threading.Lock()
         self.control_lock = threading.Lock()
@@ -70,13 +72,15 @@ class SimulationNode(DoraNode):
                 # we're switching tasks and the new task has a different number of actuators
                 return
 
+    @TimedDoraNode.record_stats
     def spin(self) -> None:
         """Spin logic for the simulation node."""
         while True:
             start_time = time.time()
-            self.parse_messages()
-            self.step()
-            self.write_states()
+            if self.profile_spin:
+                self.time_call(self._spin)
+            else:
+                self._spin()
 
             # Force controller to run at fixed rate specified by model dt.
             dt_des = self.task.sim_model.opt.timestep
@@ -88,6 +92,12 @@ class SimulationNode(DoraNode):
                     f"Sim step {dt_elapsed:.3f} longer than desired step {dt_des:.3f}!",
                     stacklevel=2,
                 )
+
+    def _spin(self) -> None:
+        """Internal spin method for profiling possibilities."""
+        self.parse_messages()
+        self.step()
+        self.write_states()
 
     def write_states(self) -> None:
         """Reads data from simulation and writes to output topic."""

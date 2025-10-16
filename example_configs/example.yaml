@@ -31,3 +31,5 @@ optimizer_config_overrides:
       use_noise_ramp: true
       noise_ramp: 4.0
       sigma: 0.2
+
+profile_spin: true

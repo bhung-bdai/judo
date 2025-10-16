@@ -6,17 +6,17 @@ from threading import Lock
 import numpy as np
 import pyarrow as pa
 from dora_utils.dataclasses import from_event, to_arrow
-from dora_utils.node import DoraNode, on_event
+from dora_utils.node import on_event
 from omegaconf import DictConfig
 
 from judo.app.structs import MujocoState, SplineData
-from judo.app.utils import register_optimizers_from_cfg, register_tasks_from_cfg
+from judo.app.utils import TimedDoraNode, register_optimizers_from_cfg, register_tasks_from_cfg
 from judo.controller import Controller, ControllerConfig
 from judo.optimizers import get_registered_optimizers
 from judo.tasks import get_registered_tasks
 
 
-class ControllerNode(DoraNode):
+class ControllerNode(TimedDoraNode):
     """Controller node."""
 
     def __init__(
@@ -27,9 +27,10 @@ class ControllerNode(DoraNode):
         max_workers: int | None = None,
         task_registration_cfg: DictConfig | None = None,
         optimizer_registration_cfg: DictConfig | None = None,
+        profile_spin: bool = False,
     ) -> None:
         """Initialize the controller node."""
-        super().__init__(node_id=node_id, max_workers=max_workers)
+        super().__init__(node_id=node_id, max_workers=max_workers, node_name="ctrl")
 
         # handling custom task and optimizer registration
         if task_registration_cfg is not None:
@@ -38,6 +39,7 @@ class ControllerNode(DoraNode):
             register_optimizers_from_cfg(optimizer_registration_cfg)
 
         self.paused = False
+        self.profile_spin = profile_spin
         self.lock = Lock()
         self.available_optimizers = get_registered_optimizers()
         self.available_tasks = get_registered_tasks()
@@ -202,12 +204,20 @@ class ControllerNode(DoraNode):
         self.node.send_output("plan_time", pa.array([end - start]))
         self.write_controls()
 
+    def _spin(self) -> None:
+        """Internal spin method for profiling possibilities."""
+        self.parse_messages()
+        self.step()
+
+    @TimedDoraNode.record_stats
     def spin(self) -> None:
         """Spin logic for the controller node."""
         while True:
             start_time = time.time()
-            self.parse_messages()
-            self.step()
+            if self.profile_spin:
+                self.time_call(self._spin)
+            else:
+                self._spin()
 
             # Force controller to run at fixed rate specified by control_freq.
             sleep_dt = 1 / self.controller_config.control_freq - (time.time() - start_time)

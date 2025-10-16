@@ -8,14 +8,14 @@ import numpy as np
 import pyarrow as pa
 import viser
 from dora_utils.dataclasses import from_arrow, to_arrow
-from dora_utils.node import DoraNode, on_event
+from dora_utils.node import on_event
 from omegaconf import DictConfig
 from PIL import Image
 from viser import GuiFolderHandle, GuiImageHandle, GuiInputHandle, IcosphereHandle, MeshHandle
 
 from judo import PACKAGE_ROOT
 from judo.app.structs import MujocoState
-from judo.app.utils import register_optimizers_from_cfg, register_tasks_from_cfg
+from judo.app.utils import TimedDoraNode, register_optimizers_from_cfg, register_tasks_from_cfg
 from judo.config import set_config_overrides
 from judo.controller import ControllerConfig
 from judo.gui import create_gui_elements
@@ -26,7 +26,7 @@ from judo.visualizers.model import ViserMjModel
 ElementType = GuiImageHandle | GuiInputHandle | GuiFolderHandle | MeshHandle | IcosphereHandle
 
 
-class VisualizationNode(DoraNode):
+class VisualizationNode(TimedDoraNode):
     """The visualization node."""
 
     def __init__(
@@ -41,15 +41,18 @@ class VisualizationNode(DoraNode):
         optimizer_override_cfg: DictConfig | None = None,
         sim_pause_button: bool = True,
         geom_exclude_substring: str = "collision",
+        profile_spin: bool = False,
     ) -> None:
         """Initialize the visualization node."""
-        super().__init__(node_id=node_id, max_workers=max_workers)
+        super().__init__(node_id=node_id, max_workers=max_workers, node_name="vis")
 
         # handling custom task and optimizer registration
         if task_registration_cfg is not None:
             register_tasks_from_cfg(task_registration_cfg)
         if optimizer_registration_cfg is not None:
             register_optimizers_from_cfg(optimizer_registration_cfg)
+
+        self.profile_spin = profile_spin
 
         # starting the server
         self.server = viser.ViserServer()
@@ -440,29 +443,37 @@ class VisualizationNode(DoraNode):
         self.server.stop()
         super().cleanup()
 
+    def _spin(self, event: dict) -> None:
+        """Internal spin method for updated different tasks and handling events."""
+        if self.sim_pause_updated.is_set():
+            self.write_sim_pause()
+            self.sim_pause_updated.clear()
+        if self.task_updated.is_set():
+            self.write_task()
+            self.task_updated.clear()
+        if self.task_reset_updated.is_set():
+            self.write_task_reset()
+            self.task_reset_updated.clear()
+        if self.optimizer_updated.is_set():
+            self.write_optimizer()
+            self.optimizer_updated.clear()
+        if self.controller_config_updated.is_set():
+            self.write_controller_config()
+            self.controller_config_updated.clear()
+        if self.optimizer_config_updated.is_set():
+            self.write_optimizer_config()
+            self.optimizer_config_updated.clear()
+        if self.task_config_updated.is_set():
+            self.write_task_config()
+            self.task_config_updated.clear()
+
+        self.handle(event)
+
+    @TimedDoraNode.record_stats
     def spin(self) -> None:
         """Spin logic for the visualization node."""
         for event in self.node:
-            if self.sim_pause_updated.is_set():
-                self.write_sim_pause()
-                self.sim_pause_updated.clear()
-            if self.task_updated.is_set():
-                self.write_task()
-                self.task_updated.clear()
-            if self.task_reset_updated.is_set():
-                self.write_task_reset()
-                self.task_reset_updated.clear()
-            if self.optimizer_updated.is_set():
-                self.write_optimizer()
-                self.optimizer_updated.clear()
-            if self.controller_config_updated.is_set():
-                self.write_controller_config()
-                self.controller_config_updated.clear()
-            if self.optimizer_config_updated.is_set():
-                self.write_optimizer_config()
-                self.optimizer_config_updated.clear()
-            if self.task_config_updated.is_set():
-                self.write_task_config()
-                self.task_config_updated.clear()
-
-            self.handle(event)
+            if self.profile_spin:
+                self.time_call(self._spin, event)
+            else:
+                self._spin(event)
