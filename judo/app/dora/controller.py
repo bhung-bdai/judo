@@ -5,15 +5,16 @@ from threading import Lock
 
 import pyarrow as pa
 from dora_utils.dataclasses import from_event, to_arrow
-from dora_utils.node import DoraNode, on_event
+from dora_utils.node import on_event
 from omegaconf import DictConfig
 
 from judo.app.data.controller_data import ControllerData
 from judo.app.structs import MujocoState
+from judo.app.utils import TimedDoraNode
 from judo.controller import ControllerConfig
 
 
-class ControllerNode(DoraNode):
+class ControllerNode(TimedDoraNode):
     """Controller node."""
 
     def __init__(
@@ -24,9 +25,11 @@ class ControllerNode(DoraNode):
         max_workers: int | None = None,
         task_registration_cfg: DictConfig | None = None,
         optimizer_registration_cfg: DictConfig | None = None,
+        profile_spin: bool = False,
     ) -> None:
         """Initialize the controller node."""
-        super().__init__(node_id=node_id, max_workers=max_workers)
+        super().__init__(node_id=node_id, max_workers=max_workers, node_name="ctrl")
+        self.profile_spin = profile_spin
         self._data = ControllerData(
             init_task=init_task,
             init_optimizer=init_optimizer,
@@ -118,12 +121,20 @@ class ControllerNode(DoraNode):
         self.node.send_output("plan_time", pa.array([self._data.last_plan_time]))
         self.write_controls()
 
+    def _spin(self) -> None:
+        """Internal spin method for handling events."""
+        self.parse_messages()
+        self.step()
+
+    @TimedDoraNode.record_stats
     def spin(self) -> None:
         """Spin logic for the controller node."""
         while True:
             start_time = time.time()
-            self.parse_messages()
-            self.step()
+            if self.profile_spin:
+                self.time_call(self._spin)
+            else:
+                self._spin()
 
             # Force controller to run at fixed rate specified by control_freq.
             sleep_dt = 1 / self._data.controller_config.control_freq - (time.time() - start_time)

@@ -1,11 +1,73 @@
 # Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved.
-
+import cProfile
 import importlib
+from functools import wraps
+from typing import Any, Callable
 
+from dora_utils.node import DoraNode
 from omegaconf import DictConfig
 
 from judo.optimizers import register_optimizer
 from judo.tasks import register_task
+
+
+class TimeProfiler:
+    """Context manager for tracking time.
+
+    This is a context manager that can be used to measure the time taken to execute a block of code.
+    """
+
+    def __init__(self, name: str = "") -> None:
+        """Initialize the time profiler."""
+        self.dump_file = f"{name}_stats.prof"
+        self._pr = cProfile.Profile()
+        self._call_count = 0
+
+    def profile_call(self, fn: Callable, *args: Any, **kwargs: Any) -> Any:
+        """Profile a function call."""
+        self._pr.enable()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            self._pr.disable()
+            self._call_count += 1
+
+    def dump_stats(self) -> None:
+        """Dump the stats to a file."""
+        self._pr.dump_stats(self.dump_file)
+
+
+class TimedDoraNode(DoraNode):
+    """A DoraNode that tracks the time taken to execute a block of code."""
+
+    def __init__(self, node_id: str, max_workers: int | None = None, node_name: str = "") -> None:
+        """Initialize the timed Dora node."""
+        super().__init__(node_id=node_id, max_workers=max_workers)
+        self.time_profiler = TimeProfiler(node_name)
+        self.node_name = node_name
+
+    @staticmethod
+    def record_stats(func: Callable) -> Callable:
+        """Decorator to catch a KeyboardInterrupt and dumps current stats to the configured dump file."""
+
+        @wraps(func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+            try:
+                return func(self, *args, **kwargs)
+            except KeyboardInterrupt:
+                print(f"Dumping stats for {self.node_name} to file...")
+                self.time_profiler.dump_stats()
+
+        return wrapper
+
+    def time_call(self, func: Callable, *args: Any, **kwargs: Any) -> Any:
+        """Time a function call."""
+        self.time_profiler.profile_call(func, *args, **kwargs)
+
+    def cleanup(self) -> None:
+        """Cleanup the node and write stats to file."""
+        self.time_profiler.dump_stats()
+        super().cleanup()
 
 
 def get_class_from_string(class_path: str) -> type:

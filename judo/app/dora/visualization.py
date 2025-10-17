@@ -4,17 +4,18 @@ import warnings
 
 import pyarrow as pa
 from dora_utils.dataclasses import from_arrow, to_arrow
-from dora_utils.node import DoraNode, on_event
+from dora_utils.node import on_event
 from omegaconf import DictConfig
 from viser import GuiFolderHandle, GuiImageHandle, GuiInputHandle, IcosphereHandle, MeshHandle
 
 from judo.app.data.visualization_data import VisualizationData
 from judo.app.structs import MujocoState
+from judo.app.utils import TimedDoraNode
 
 ElementType = GuiImageHandle | GuiInputHandle | GuiFolderHandle | MeshHandle | IcosphereHandle
 
 
-class VisualizationNode(DoraNode):
+class VisualizationNode(TimedDoraNode):
     """The visualization node."""
 
     def __init__(
@@ -29,9 +30,11 @@ class VisualizationNode(DoraNode):
         optimizer_override_cfg: DictConfig | None = None,
         sim_pause_button: bool = True,
         geom_exclude_substring: str = "collision",
+        profile_spin: bool = False,
     ) -> None:
         """Initialize the visualization node."""
-        super().__init__(node_id=node_id, max_workers=max_workers)
+        super().__init__(node_id=node_id, max_workers=max_workers, node_name="vis")
+        self.profile_spin = profile_spin
         self._data = VisualizationData(
             init_task=init_task,
             init_optimizer=init_optimizer,
@@ -122,25 +125,32 @@ class VisualizationNode(DoraNode):
         plan_time_s = event["value"].to_numpy(zero_copy_only=False)[0]
         self._data.gui_elements["plan_time_display"].value = plan_time_s * 1000  # ms
 
+    def _spin(self, event: dict) -> None:
+        """Internal spin method for handling events."""
+        if self._data.sim_pause_updated.is_set():
+            self.write_sim_pause()
+        if self._data.task_updated.is_set():
+            self.write_task()
+        if self._data.task_reset_updated.is_set():
+            self.write_task_reset()
+        if self._data.optimizer_updated.is_set():
+            self.write_optimizer()
+        if self._data.controller_config_updated.is_set():
+            self.write_controller_config()
+        if self._data.optimizer_config_updated.is_set():
+            self.write_optimizer_config()
+        if self._data.task_config_updated.is_set():
+            self.write_task_config()
+
+        self.handle(event)
+
     def spin(self) -> None:
         """Spin logic for the visualization node."""
         for event in self.node:
-            if self._data.sim_pause_updated.is_set():
-                self.write_sim_pause()
-            if self._data.task_updated.is_set():
-                self.write_task()
-            if self._data.task_reset_updated.is_set():
-                self.write_task_reset()
-            if self._data.optimizer_updated.is_set():
-                self.write_optimizer()
-            if self._data.controller_config_updated.is_set():
-                self.write_controller_config()
-            if self._data.optimizer_config_updated.is_set():
-                self.write_optimizer_config()
-            if self._data.task_config_updated.is_set():
-                self.write_task_config()
-
-            self.handle(event)
+            if self.profile_spin:
+                self.time_call(self._spin, event)
+            else:
+                self._spin(event)
 
     def cleanup(self) -> None:
         """Cleanup the visualization node."""
