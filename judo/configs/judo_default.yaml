@@ -1,4 +1,35 @@
-task: cylinder_push
+# task: cylinder_push
+# task: spot_base
+# task: spot_box_push_baseline
+# task: spot_locomotion
+# task: spot_chair_push_baseline
+# task: spot_tire_push_baseline
+# task: spot_yellow_chair
+# task: spot_yellow_chair_ramp
+# task: spot_barrier_drag
+# task: spot_tire_rack_drag
+# task: spot_tire_upright
+# task: spot_tire_stack
+# task: spot_rugged_box_push
+# task: spot_barrier_upright
+# task: spot_tire_push
+# task: spot_chair_push
+# task: spot_rack_push
+# task: spot_cone_push
+# task: spot_traffic_cone
+# task: spot_barbell
+# task: spot_table_short
+# task: spot_door_box
+# task: g1_base
+# task: g1_box
+# task: g1_door
+# task: g1_table_push
+# task: g1_table_upright
+task: g1_chair_push
+# task: g1_box
+# task: g1_box_carry
+# task: fr3_ball
+# optimizer: skill_policy
 optimizer: cem
 
 dataflow:
@@ -74,14 +105,13 @@ dataflow:
 
 node_definitions:
   simulation:
-    _target_: judo.app.dora.simulation.SimulationNode
+    _target_: judo.app.simulation.SimulationNode
     node_id: simulation
     max_workers: null
     init_task: ${task}
     task_registration_cfg: ${custom_tasks}
-    simulation_backend: ${simulation_backend}
   visualization:
-    _target_: judo.app.dora.visualization.VisualizationNode
+    _target_: judo.app.visualization.VisualizationNode
     node_id: visualization
     max_workers: null
     init_task: ${task}
@@ -91,8 +121,9 @@ node_definitions:
     controller_override_cfg: ${controller_config_overrides}
     optimizer_override_cfg: ${optimizer_config_overrides}
     sim_pause_button: true
+    geom_exclude_substring: ""
   controller:
-    _target_: judo.app.dora.controller.ControllerNode
+    _target_: judo.app.controller.ControllerNode
     node_id: controller
     max_workers: null
     init_task: ${task}
@@ -104,4 +135,3 @@ custom_tasks: null
 custom_optimizers: null
 controller_config_overrides: null
 optimizer_config_overrides: null
-simulation_backend: mujoco

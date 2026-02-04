@@ -188,5 +188,10 @@ outputs/
 MUJOCO_LOG.TXT
 
 # assets
-*.obj
-*.stl
+# *.obj
+# *.stl
+
+.vscode/
+*.h5
+
+results/

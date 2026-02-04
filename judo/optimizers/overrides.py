@@ -1,7 +1,8 @@
-# Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved.
+# Copyright (c) 2026 Robotics and AI Institute LLC. All rights reserved.
 
 from judo.config import set_config_overrides
 from judo.optimizers.cem import CrossEntropyMethodConfig
+from judo.optimizers.cmaes import CMAESConfig
 from judo.optimizers.mppi import MPPIConfig
 from judo.optimizers.ps import PredictiveSamplingConfig
 
@@ -220,5 +221,174 @@ def set_default_fr3_pick_overrides() -> None:
             "noise_ramp": 4.0,
             "sigma": 0.01,
             "temperature": 0.002,
+        },
+    )
+
+
+def set_default_spot_yellow_chair_ramp_overrides() -> None:
+    """Sets the default task-specific optimizer config overrides for the spot yellow chair task."""
+    set_config_overrides(
+        "spot_yellow_chair_ramp",
+        PredictiveSamplingConfig,
+        {
+            # "num_nodes": 4,
+            "num_rollouts": 16,
+            # "use_noise_ramp": False,
+        },
+    )
+    set_config_overrides(
+        "spot_yellow_chair_ramp",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 17,
+        },
+    )
+    set_config_overrides(
+        "spot_yellow_chair_ramp",
+        MPPIConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+    set_config_overrides(
+        "spot_yellow_chair_ramp",
+        CMAESConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+            "min_std": 0.2,
+        },
+    )
+
+
+def set_default_spot_barbell_overrides() -> None:
+    set_config_overrides(
+        "spot_barbell",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+            "use_noise_ramp": True,
+            "noise_ramp": 5.0,
+            "sigma_min": 0.02,
+            "sigma_max": 2.0,
+        },
+    )
+
+
+def set_default_spot_table_drag_overrides() -> None:
+    set_config_overrides(
+        "spot_table_drag",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+            # "use_noise_ramp": True,
+            # "noise_ramp": 5.0,
+            # "sigma_min": 0.02,
+            # "sigma_max": 2.0
+        },
+    )
+
+
+def set_default_spot_traffic_cone_overrides() -> None:
+    set_config_overrides(
+        "spot_traffic_cone",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+            "use_noise_ramp": True,
+            "noise_ramp": 2.0,
+            "sigma_min": 0.1,
+            "sigma_max": 4.0,
+        },
+    )
+
+
+def set_default_spot_box_overrides() -> None:
+    set_config_overrides(
+        "spot_box",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+            "use_noise_ramp": False,
+        },
+    )
+    set_config_overrides(
+        "spot_box",
+        MPPIConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+        },
+    )
+
+
+def set_default_spot_locomotion_overrides() -> None:
+    set_config_overrides(
+        "spot_locomotion",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+
+
+def set_default_spot_box_push_baseline_overrides() -> None:
+    set_config_overrides(
+        "spot_box_push_baseline",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+
+
+def set_default_spot_chair_push_baseline_overrides() -> None:
+    set_config_overrides(
+        "spot_chair_push_baseline",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+
+
+def set_default_spot_tire_push_baseline_overrides() -> None:
+    set_config_overrides(
+        "spot_tire_push_baseline",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+
+
+def set_default_spot_rack_push_baseline_overrides() -> None:
+    set_config_overrides(
+        "spot_rack_push_baseline",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
+        },
+    )
+
+
+def set_default_spot_cone_push_baseline_overrides() -> None:
+    set_config_overrides(
+        "spot_cone_push_baseline",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 16,
         },
     )

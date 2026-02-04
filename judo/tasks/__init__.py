@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved.
+# Copyright (c) 2026 Robotics and AI Institute LLC. All rights reserved.
 
 from typing import Dict, Tuple, Type
 
@@ -7,16 +7,95 @@ from judo.tasks.caltech_leap_cube import CaltechLeapCube, CaltechLeapCubeConfig
 from judo.tasks.cartpole import Cartpole, CartpoleConfig
 from judo.tasks.cylinder_push import CylinderPush, CylinderPushConfig
 from judo.tasks.fr3_pick import FR3Pick, FR3PickConfig
+from judo.tasks.g1.g1_base import G1Base, G1BaseConfig
+from judo.tasks.g1.g1_box import G1Box, G1BoxConfig
+from judo.tasks.g1.g1_box_carry import G1BoxCarry, G1BoxCarryConfig
+from judo.tasks.g1.g1_chair_push import G1ChairPush, G1ChairPushConfig
+from judo.tasks.g1.g1_door import G1Door, G1DoorConfig
+from judo.tasks.g1.g1_table_push import G1TablePush, G1TablePushConfig
+from judo.tasks.g1.g1_table_upright import G1TableUpright, G1TableUprightConfig
 from judo.tasks.leap_cube import LeapCube, LeapCubeConfig
 from judo.tasks.leap_cube_down import LeapCubeDown, LeapCubeDownConfig
+from judo.tasks.spot.spot_barbell import SpotBarbell, SpotBarbellConfig
+from judo.tasks.spot.spot_barrier_drag import SpotBarrierDrag, SpotBarrierDragConfig
+from judo.tasks.spot.spot_barrier_upright import SpotBarrierUpright, SpotBarrierUprightConfig
+from judo.tasks.spot.spot_base import SpotBase, SpotBaseConfig
+from judo.tasks.spot.spot_box_push import SpotBoxPush, SpotBoxPushConfig
+from judo.tasks.spot.spot_box_upright import SpotBoxUpright, SpotBoxUprightConfig
+from judo.tasks.spot.spot_chair_push import SpotChairPush, SpotChairPushConfig
+from judo.tasks.spot.spot_chair_upright import SpotChairUpright, SpotChairUprightConfig
+from judo.tasks.spot.spot_cone_push import SpotConePush, SpotConePushConfig
+from judo.tasks.spot.spot_cone_upright import SpotConeUpright, SpotConeUprightConfig
+from judo.tasks.spot.spot_rack_push import SpotRackPush, SpotRackPushConfig
+from judo.tasks.spot.spot_rack_upright import SpotRackUpright, SpotRackUprightConfig
+from judo.tasks.spot.spot_rugged_box_push import SpotRuggedBoxPush, SpotRuggedBoxPushConfig
+from judo.tasks.spot.spot_table_drag import SpotTableDrag, SpotTableDragConfig
+from judo.tasks.spot.spot_table_push import SpotTablePush, SpotTablePushConfig
+from judo.tasks.spot.spot_tire_push import SpotTirePush, SpotTirePushConfig
+from judo.tasks.spot.spot_tire_rack_drag import SpotTireRackDrag, SpotTireRackDragConfig
+from judo.tasks.spot.spot_tire_stack import SpotTireStack, SpotTireStackConfig
+from judo.tasks.spot.spot_tire_upright import SpotTireUpright, SpotTireUprightConfig
+from judo.tasks.spot.spot_traffic_cone import SpotTrafficCone, SpotTrafficConeConfig
+from judo.tasks.spot.spot_yellow_chair import SpotYellowChair, SpotYellowChairConfig
+from judo.tasks.spot.spot_yellow_chair_ramp import SpotYellowChairRamp, SpotYellowChairRampConfig
+
+from .spot_baseline import (
+    SpotBoxPushBaseline,
+    SpotBoxPushBaselineConfig,
+    SpotChairPushBaseline,
+    SpotChairPushBaselineConfig,
+    SpotConePushBaseline,
+    SpotConePushBaselineConfig,
+    SpotLocomotion,
+    SpotLocomotionConfig,
+    SpotRackPushBaseline,
+    SpotRackPushBaselineConfig,
+    SpotTirePushBaseline,
+    SpotTirePushBaselineConfig,
+)
 
 _registered_tasks: Dict[str, Tuple[Type[Task], Type[TaskConfig]]] = {
-    CylinderPush.name: (CylinderPush, CylinderPushConfig),
-    Cartpole.name: (Cartpole, CartpoleConfig),
-    FR3Pick.name: (FR3Pick, FR3PickConfig),
-    LeapCube.name: (LeapCube, LeapCubeConfig),
-    LeapCubeDown.name: (LeapCubeDown, LeapCubeDownConfig),
-    CaltechLeapCube.name: (CaltechLeapCube, CaltechLeapCubeConfig),
+    "spot_base": (SpotBase, SpotBaseConfig),
+    "spot_box_push": (SpotBoxPush, SpotBoxPushConfig),
+    "spot_yellow_chair": (SpotYellowChair, SpotYellowChairConfig),
+    "spot_yellow_chair_ramp": (SpotYellowChairRamp, SpotYellowChairRampConfig),
+    "spot_traffic_cone": (SpotTrafficCone, SpotTrafficConeConfig),
+    "spot_barrier_upright": (SpotBarrierUpright, SpotBarrierUprightConfig),
+    "spot_barrier_drag": (SpotBarrierDrag, SpotBarrierDragConfig),
+    "spot_barbell": (SpotBarbell, SpotBarbellConfig),
+    "spot_table_drag": (SpotTableDrag, SpotTableDragConfig),
+    "spot_tire_push": (SpotTirePush, SpotTirePushConfig),
+    "spot_chair_push": (SpotChairPush, SpotChairPushConfig),
+    "spot_rack_push": (SpotRackPush, SpotRackPushConfig),
+    "spot_cone_push": (SpotConePush, SpotConePushConfig),
+    "spot_tire_rack_drag": (SpotTireRackDrag, SpotTireRackDragConfig),
+    "spot_box_upright": (SpotBoxUpright, SpotBoxUprightConfig),
+    "spot_chair_upright": (SpotChairUpright, SpotChairUprightConfig),
+    "spot_rack_upright": (SpotRackUpright, SpotRackUprightConfig),
+    "spot_cone_upright": (SpotConeUpright, SpotConeUprightConfig),
+    "spot_tire_upright": (SpotTireUpright, SpotTireUprightConfig),
+    "spot_tire_stack": (SpotTireStack, SpotTireStackConfig),
+    "spot_rugged_box_push": (SpotRuggedBoxPush, SpotRuggedBoxPushConfig),
+    "spot_table_push": (SpotTablePush, SpotTablePushConfig),
+    "cylinder_push": (CylinderPush, CylinderPushConfig),
+    "cartpole": (Cartpole, CartpoleConfig),
+    "fr3_pick": (FR3Pick, FR3PickConfig),
+    "leap_cube": (LeapCube, LeapCubeConfig),
+    "leap_cube_down": (LeapCubeDown, LeapCubeDownConfig),
+    "caltech_leap_cube": (CaltechLeapCube, CaltechLeapCubeConfig),
+    "spot_locomotion": (SpotLocomotion, SpotLocomotionConfig),
+    "spot_box_push_baseline": (SpotBoxPushBaseline, SpotBoxPushBaselineConfig),
+    "spot_tire_push_baseline": (SpotTirePushBaseline, SpotTirePushBaselineConfig),
+    "spot_chair_push_baseline": (SpotChairPushBaseline, SpotChairPushBaselineConfig),
+    "spot_rack_push_baseline": (SpotRackPushBaseline, SpotRackPushBaselineConfig),
+    "spot_cone_push_baseline": (SpotConePushBaseline, SpotConePushBaselineConfig),
+    "g1_base": (G1Base, G1BaseConfig),
+    "g1_box": (G1Box, G1BoxConfig),
+    "g1_door": (G1Door, G1DoorConfig),
+    "g1_box_carry": (G1BoxCarry, G1BoxCarryConfig),
+    "g1_table_push": (G1TablePush, G1TablePushConfig),
+    "g1_table_upright": (G1TableUpright, G1TableUprightConfig),
+    "g1_chair_push": (G1ChairPush, G1ChairPushConfig),
 }
 
 
@@ -47,4 +126,74 @@ __all__ = [
     "LeapCubeConfig",
     "LeapCubeDown",
     "LeapCubeDownConfig",
+    "SpotBase",
+    "SpotBaseConfig",
+    "SpotBoxPush",
+    "SpotBoxPushConfig",
+    "SpotBarrierUpright",
+    "SpotBarrierUprightConfig",
+    "SpotBarrierDrag",
+    "SpotBarrierDragConfig",
+    "SpotYellowChair",
+    "SpotYellowChairConfig",
+    "SpotYellowChairRamp",
+    "SpotYellowChairRampConfig",
+    "SpotTrafficCone",
+    "SpotTrafficConeConfig",
+    "SpotBarbell",
+    "SpotBarbellConfig",
+    "SpotTableDrag",
+    "SpotTableDragConfig",
+    "SpotTirePush",
+    "SpotTirePushConfig",
+    "SpotChairPush",
+    "SpotChairPushConfig",
+    "SpotRackPush",
+    "SpotRackPushConfig",
+    "SpotConePush",
+    "SpotConePushConfig",
+    "SpotTireRackDrag",
+    "SpotTireRackDragConfig",
+    "SpotBoxUpright",
+    "SpotBoxUprightConfig",
+    "SpotChairUpright",
+    "SpotChairUprightConfig",
+    "SpotRackUpright",
+    "SpotRackUprightConfig",
+    "SpotConeUpright",
+    "SpotConeUprightConfig",
+    "SpotTireUpright",
+    "SpotTireUprightConfig",
+    "SpotTireStack",
+    "SpotTireStackConfig",
+    "SpotRuggedBoxPush",
+    "SpotRuggedBoxPushConfig",
+    "SpotTablePush",
+    "SpotTablePushConfig",
+    "SpotLocomotion",
+    "SpotLocomotionConfig",
+    "SpotBoxPushBaseline",
+    "SpotBoxPushBaselineConfig",
+    "SpotTirePushBaseline",
+    "SpotTirePushBaselineConfig",
+    "SpotChairPushBaseline",
+    "SpotChairPushBaselineConfig",
+    "SpotRackPushBaseline",
+    "SpotRackPushBaselineConfig",
+    "SpotConePushBaseline",
+    "SpotConePushBaselineConfig",
+    "G1Base",
+    "G1BaseConfig",
+    "G1Box",
+    "G1BoxConfig",
+    "G1Door",
+    "G1DoorConfig",
+    "G1BoxCarry",
+    "G1BoxCarryConfig",
+    "G1TablePush",
+    "G1TablePushConfig",
+    "G1TableUpright",
+    "G1TableUprightConfig",
+    "G1ChairPush",
+    "G1ChairPushConfig",
 ]

@@ -1,0 +1,21 @@
+
+<mujoco model="table">
+<!-- Copyright (c) 2025 Boston Dynamics AI Institute LLC. All rights reserved. -->
+  <worldbody>
+    <body name="table" pos="0 0 0">
+      <joint name="table_joint" type="free" limited="false"/>
+      <inertial pos="0 0 0" mass="20" diaginertia="2.5 2.5 3.0"/>
+
+      <!-- Tabletop: 1.2m x 0.8m x 0.03m (typical dining table dimensions) -->
+      <geom name="tabletop" type="box" size="0.6 0.4 0.015" pos="0 0 0.765"/>
+
+      <!-- Four legs: positioned at corners, cylinder radius 0.05m, height 0.75m -->
+      <geom name="leg1" type="cylinder" size="0.05 0.375" pos="0.52 0.32 0.375"/>
+      <geom name="leg2" type="cylinder" size="0.05 0.375" pos="-0.52 0.32 0.375"/>
+      <geom name="leg3" type="cylinder" size="0.05 0.375" pos="0.52 -0.32 0.375"/>
+      <geom name="leg4" type="cylinder" size="0.05 0.375" pos="-0.52 -0.32 0.375"/>
+
+      <site name="site_object" pos="0 0 0" size="0.01"/>
+    </body>
+  </worldbody>
+</mujoco>
