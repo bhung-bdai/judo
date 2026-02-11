@@ -14,6 +14,7 @@ from judo.config import OverridableConfig
 from judo.gui import slider
 from judo.optimizers import Optimizer, OptimizerConfig, get_registered_optimizers
 from judo.tasks import Task, TaskConfig, get_registered_tasks
+from judo.tasks.spot.spot_constants import POLICY_OUTPUT_DIM
 from judo.utils.mujoco import RolloutBackend
 from judo.utils.normalization import (
     IdentityNormalizer,
@@ -74,7 +75,7 @@ class Controller:
             physics_substeps=self.task.physics_substeps,
         )
         self._last_policy_output = (
-            np.zeros((self.optimizer_cfg.num_rollouts, 12)) if self.task.uses_locomotion_policy else None
+            np.zeros((self.optimizer_cfg.num_rollouts, POLICY_OUTPUT_DIM)) if self.task.uses_locomotion_policy else None
         )
         self.action_normalizer = self._init_action_normalizer()
 
@@ -214,6 +215,8 @@ class Controller:
         # resizing any variables due to changes in the GUI
         if self.rollout_backend.num_threads != self.optimizer_cfg.num_rollouts:
             self.rollout_backend.update(self.optimizer_cfg.num_rollouts)
+            if self._last_policy_output is not None:
+                self._last_policy_output = np.zeros((self.optimizer_cfg.num_rollouts, POLICY_OUTPUT_DIM))
 
         normalizer_cls = normalizer_registry.get(self.action_normalizer_type)
         if normalizer_cls is None:
@@ -306,7 +309,7 @@ class Controller:
         self.update_spline(self.times, self.nominal_knots)
         # Reset policy output state for locomotion policy tasks
         if self.task.uses_locomotion_policy:
-            self._last_policy_output = np.zeros((self.optimizer_cfg.num_rollouts, 12))
+            self._last_policy_output = np.zeros((self.optimizer_cfg.num_rollouts, POLICY_OUTPUT_DIM))
 
     def update_traces(self) -> None:
         """Update traces by extracting data from sensors readings.

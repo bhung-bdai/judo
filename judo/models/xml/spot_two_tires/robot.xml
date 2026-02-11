@@ -1,0 +1,97 @@
+<mujoco model="spot_two_tires">
+<!-- Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved. -->
+<!-- Scene: Spot robot with two tires for stacking tasks -->
+
+  <compiler angle="radian" meshdir="../../meshes/" assetdir="../../meshes/" autolimits="true"/>
+  <option timestep="0.01" solver="Newton" integrator="implicitfast" density="1"/>
+
+  <include file="../spot_primitive/default.xml" />
+  <include file="../spot_primitive/assets.xml" />
+
+  <!-- Tire assets (shared by both tires) -->
+  <default>
+    <default class="tire_visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+    </default>
+    <default class="tire_collision">
+      <geom friction="1.15 1.0" priority="6" material="tire_semi_transparent"/>
+    </default>
+  </default>
+
+  <asset>
+    <material name="tire_black" rgba="0.25 0.25 0.25 1" metallic="0.0" roughness="1.0"/>
+    <material name="tire_semi_transparent" rgba="1 1 1 0.5" metallic="0.0" roughness="1.0"/>
+    <mesh name="tire_visual" file="objects/tire/meshes/visual/tire.obj"/>
+    <mesh name="tire_0_collision" file="objects/tire/meshes/collision/part_0.obj"/>
+    <mesh name="tire_1_collision" file="objects/tire/meshes/collision/part_1.obj"/>
+    <mesh name="tire_2_collision" file="objects/tire/meshes/collision/part_2.obj"/>
+    <mesh name="tire_3_collision" file="objects/tire/meshes/collision/part_3.obj"/>
+    <mesh name="tire_4_collision" file="objects/tire/meshes/collision/part_4.obj"/>
+    <mesh name="tire_5_collision" file="objects/tire/meshes/collision/part_5.obj"/>
+    <mesh name="tire_6_collision" file="objects/tire/meshes/collision/part_6.obj"/>
+    <mesh name="tire_7_collision" file="objects/tire/meshes/collision/part_7.obj"/>
+    <mesh name="tire_8_collision" file="objects/tire/meshes/collision/part_8.obj"/>
+    <mesh name="tire_9_collision" file="objects/tire/meshes/collision/part_9.obj"/>
+    <mesh name="tire_10_collision" file="objects/tire/meshes/collision/part_10.obj"/>
+    <mesh name="tire_11_collision" file="objects/tire/meshes/collision/part_11.obj"/>
+    <mesh name="tire_12_collision" file="objects/tire/meshes/collision/part_12.obj"/>
+    <mesh name="tire_13_collision" file="objects/tire/meshes/collision/part_13.obj"/>
+    <mesh name="tire_14_collision" file="objects/tire/meshes/collision/part_14.obj"/>
+    <mesh name="tire_15_collision" file="objects/tire/meshes/collision/part_15.obj"/>
+    <mesh name="tire_16_collision" file="objects/tire/meshes/collision/part_16.obj"/>
+    <mesh name="tire_17_collision" file="objects/tire/meshes/collision/part_17.obj"/>
+    <mesh name="tire_18_collision" file="objects/tire/meshes/collision/part_18.obj"/>
+    <mesh name="tire_19_collision" file="objects/tire/meshes/collision/part_19.obj"/>
+    <mesh name="tire_20_collision" file="objects/tire/meshes/collision/part_20.obj"/>
+  </asset>
+
+  <worldbody>
+    <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5" dir="0 0 -1" castshadow="false"/>
+    <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1"/>
+
+    <geom name="ground" type="plane" size="10 10 0.01" class="collision" priority="5" friction="0.7" material="blue_grid"/>
+
+    <body name="body" pos="0 0 0.52">
+      <include file="../spot_primitive/body.xml" />
+      <include file="../spot_primitive/legs.xml" />
+      <include file="../spot_primitive/arm.xml" />
+    </body>
+
+    <!-- Bottom tire (lying flat) -->
+    <body name="tire_body" pos="-2 1 0.17">
+      <joint name="tire_rubber_joint" type="free"/>
+      <inertial pos="0 0 0" mass="15.3" diaginertia="0.57 0.96 0.57"/>
+      <geom name="tire_1_approx" type="cylinder" class="tire_collision" size="0.33 0.17" quat="1 1 0 0"/>
+      <site name="site_object_2" pos="0 0 0" size="0.01"/>
+    </body>
+
+    <!-- Top tire (upright) -->
+    <body name="tire_body_2" pos="-2 0 0.33">
+      <joint name="tire_rubber_joint_2" type="free"/>
+      <inertial pos="0 0 0" mass="15.3" diaginertia="0.57 0.96 0.57"/>
+      <geom name="tire_2_approx" type="cylinder" class="tire_collision" size="0.33 0.17" quat="1 1 0 0"/>
+      <geom name="tire_2_visual" type="mesh" class="tire_visual" mesh="tire_visual" material="tire_black"/>
+      <site name="site_object" pos="0 0 0" size="0.01"/>
+    </body>
+  </worldbody>
+
+  <include file="../spot_primitive/actuator.xml" />
+  <include file="../spot_primitive/contact.xml" />
+
+  <sensor>
+    <framepos name="sensor_body" objtype="site" objname="site_body"/>
+    <framexaxis name="body_x_axis" objtype="site" objname="site_body"/>
+    <framexaxis name="object_x_axis" objtype="site" objname="site_object"/>
+    <frameyaxis name="object_y_axis" objtype="site" objname="site_object"/>
+    <framezaxis name="object_z_axis" objtype="site" objname="site_object"/>
+    <frameyaxis name="top_tire_y_axis" objtype="site" objname="site_object"/>
+    <framepos name="trace_fngr_site" objtype="site" objname="site_arm_link_fngr"/>
+    <framexaxis name="gripper_x_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <frameyaxis name="gripper_y_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <framexaxis name="finger_x_axis" objtype="site" objname="site_arm_link_fngr"/>
+    <framepos name="fl_pos" objtype="site" objname="site_front_left"/>
+    <framepos name="fr_pos" objtype="site" objname="site_front_right"/>
+    <framepos name="hl_pos" objtype="site" objname="site_rear_left"/>
+    <framepos name="hr_pos" objtype="site" objname="site_rear_right"/>
+  </sensor>
+</mujoco>

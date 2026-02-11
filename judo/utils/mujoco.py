@@ -98,7 +98,7 @@ class RolloutBackend:
             Tuple of:
                 - states: Rolled out states, shape (num_threads, num_timesteps, nq+nv)
                 - sensors: Sensor readings, shape (num_threads, num_timesteps, nsensor)
-                - policy_outputs: Final policy outputs (mujoco_extensions only), shape (num_threads, 12).
+                - policy_outputs: Final policy outputs (mujoco_extensions only), shape (num_threads, POLICY_OUTPUT_DIM).
                     None for mujoco backend.
         """
         # Tile x0 if it's a single state

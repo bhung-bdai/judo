@@ -341,7 +341,11 @@ class SpotBase(Task[ConfigT], Generic[ConfigT]):
             controls = controls[:, None, :]
             T = 1
 
-        out = np.zeros((controls.shape[0], controls.shape[1], 25), dtype=controls.dtype)
+        # Initialize from default_policy_command so uncontrolled dimensions
+        # keep their defaults (e.g. arm stays at ARM_STOWED_POS when use_arm=False)
+        out = np.broadcast_to(
+            self.default_policy_command, (controls.shape[0], controls.shape[1], 25)
+        ).copy()
 
         # Index calculations after selection mask removal
         base_end = 3
@@ -351,9 +355,6 @@ class SpotBase(Task[ConfigT], Generic[ConfigT]):
 
         # Base velocity
         out[..., 0:3] = controls[..., 0:base_end]
-
-        # Default torso height
-        out[..., 24] = STANDING_HEIGHT
 
         # Arm commands
         if self.use_arm:

@@ -1,0 +1,68 @@
+<mujoco model="spot_wheel_rim">
+<!-- Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved. -->
+<!-- Scene: Spot robot with wheel rim for roll tasks -->
+
+  <compiler angle="radian" meshdir="../../meshes/" assetdir="../../meshes/" autolimits="true"/>
+  <option timestep="0.01" solver="Newton" integrator="implicitfast" density="1"/>
+
+  <include file="../spot_primitive/default.xml" />
+  <include file="../spot_primitive/assets.xml" />
+
+  <default>
+    <default class="wheel_rim_visual">
+      <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+    </default>
+    <default class="wheel_rim_collision">
+      <geom friction="0.5 0.2 0.2" priority="5"/>
+    </default>
+  </default>
+
+  <asset>
+    <material name="wheel_rim_material" rgba="0.6 0.6 0.6 1" metallic="1.0" roughness="0.4"/>
+    <material name="wheel_rim_semi_transparent" rgba="1 1 1 0.5" metallic="0.0" roughness="1.0"/>
+    <mesh name="wheel_rim_mesh" file="objects/wheel_rim/meshes/visual/wheel_rim.obj"/>
+    <mesh name="wheel_rim_coacd" file="objects/wheel_rim/meshes/collision/wheel_rim.obj"/>
+  </asset>
+
+  <worldbody>
+    <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5" dir="0 0 -1" castshadow="false"/>
+    <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1"/>
+
+    <geom name="ground" type="plane" size="10 10 0.01" class="collision" priority="5" friction="0.7" material="blue_grid"/>
+
+    <body name="body" pos="0 0 0.52">
+      <include file="../spot_primitive/body.xml" />
+      <include file="../spot_primitive/legs.xml" />
+      <include file="../spot_primitive/arm.xml" />
+    </body>
+
+    <!-- Wheel rim object -->
+    <body name="wheel_rim_body" pos="2 0 0.2575">
+      <joint name="wheel_rim_joint" type="free"/>
+      <inertial pos="0 -0.08 0" mass="15.8" diaginertia="0.57 0.96 0.57"/>
+      <geom name="object_primitive_approx" class="wheel_rim_visual" material="wheel_rim_semi_transparent" type="cylinder" size="0.25 0.13" quat="1 1 0 0" rgba="0.5 0.5 0.5 1"/>
+      <geom name="wheel_rim_visual" class="wheel_rim_visual" material="wheel_rim_material" type="mesh" mesh="wheel_rim_mesh" euler="0 0 1.57079632679"/>
+      <geom name="wheel_rim_collision" class="wheel_rim_collision" material="wheel_rim_semi_transparent" type="mesh" mesh="wheel_rim_coacd" euler="0 0 1.57079632679"/>
+      <site name="site_object" pos="0 0 0" size="0.01"/>
+    </body>
+  </worldbody>
+
+  <include file="../spot_primitive/actuator.xml" />
+  <include file="../spot_primitive/contact.xml" />
+
+  <sensor>
+    <framepos name="sensor_body" objtype="site" objname="site_body"/>
+    <framexaxis name="body_x_axis" objtype="site" objname="site_body"/>
+    <framexaxis name="object_x_axis" objtype="site" objname="site_object"/>
+    <frameyaxis name="object_y_axis" objtype="site" objname="site_object"/>
+    <framezaxis name="object_z_axis" objtype="site" objname="site_object"/>
+    <framepos name="trace_fngr_site" objtype="site" objname="site_arm_link_fngr"/>
+    <framexaxis name="gripper_x_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <frameyaxis name="gripper_y_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <framexaxis name="finger_x_axis" objtype="site" objname="site_arm_link_fngr"/>
+    <framepos name="fl_pos" objtype="site" objname="site_front_left"/>
+    <framepos name="fr_pos" objtype="site" objname="site_front_right"/>
+    <framepos name="hl_pos" objtype="site" objname="site_rear_left"/>
+    <framepos name="hr_pos" objtype="site" objname="site_rear_right"/>
+  </sensor>
+</mujoco>

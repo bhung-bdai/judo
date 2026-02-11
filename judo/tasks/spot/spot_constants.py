@@ -19,6 +19,8 @@ DEFAULT_SPOT_ROLLOUT_CUTOFF_TIME: float = 0.125
 
 # Number of legs
 N_LEGS = 4
+N_LEG_JOINTS = 3
+POLICY_OUTPUT_DIM = N_LEGS * N_LEG_JOINTS  # 12 leg actuator commands
 
 ### Joint Names
 LEG_JOINT_NAMES_BOSDYN = [
@@ -113,6 +115,27 @@ BASE_SOFT_LIMITS = 0.7 * np.ones(3)
 TORSO_LOWER = np.array([-0.0, -1.0, 0.3])
 TORSO_UPPER = np.array([+0.0, +1.0, 1.0])
 
-### Object constants (for tire tasks)
+### Object constants
+# Synced from starfish/dexterity/spot_interface/spot/constants.py
+Z_AXIS = np.array([0.0, 0.0, 1.0])
+WR1_T_GRASP = 0.12  # meters in WR1 frame along x axis
+
+# Tire
 TIRE_RADIUS = 0.33
 TIRE_HALF_WIDTH = 0.17
+
+# Box
+BOX_HALF_LENGTH = 0.254
+
+# Box with handle
+BOX_WITH_HANDLE_HALF_LENGTH = 0.275
+
+# Small box
+SMALL_BOX_HALF_LENGTH = 0.175
+
+# Wheel rim
+RIM_RADIUS = 0.2575
+
+# Table
+TABLE_HEIGHT = 0.365
+TABLE_WIDTH = 0.265

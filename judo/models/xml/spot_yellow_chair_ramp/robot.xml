@@ -1,0 +1,66 @@
+<mujoco model="spot_yellow_chair_ramp">
+<!-- Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved. -->
+<!-- Scene: Spot robot with yellow chair and ramp -->
+
+  <compiler angle="radian" meshdir="../../meshes/" assetdir="../../meshes/" autolimits="true"/>
+  <option timestep="0.01" solver="Newton" integrator="implicitfast" density="1"/>
+
+  <include file="../spot_primitive/default.xml" />
+  <include file="../spot_primitive/assets.xml" />
+
+  <asset>
+    <mesh name="yellow_chair_mesh" file="objects/yellow_chair/meshes/visual/visual_v2.obj"/>
+    <mesh name="yellow_chair_back" file="objects/yellow_chair/meshes/collision/yellow_chair_back_v2.obj"/>
+    <mesh name="yellow_chair_seat" file="objects/yellow_chair/meshes/collision/yellow_chair_seat_v2.obj"/>
+  </asset>
+
+  <worldbody>
+    <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5" dir="0 0 -1" castshadow="false"/>
+    <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1"/>
+
+    <geom name="ground" type="plane" size="10 10 0.01" class="collision" priority="5" friction="0.7" material="blue_grid"/>
+
+    <body name="body" pos="0 0 0.52">
+      <include file="../spot_primitive/body.xml" />
+      <include file="../spot_primitive/legs.xml" />
+      <include file="../spot_primitive/arm.xml" />
+    </body>
+
+    <!-- Yellow chair object -->
+    <body name="yellow_chair_body" pos="1.0 0 0">
+      <joint name="yellow_chair_joint" type="free"/>
+      <inertial pos="0 0.06 0.26" mass="16.58" diaginertia="0.25 0.25 0.25"/>
+      <geom name="yellow_chair_visual" class="visual" type="mesh" mesh="yellow_chair_mesh"/>
+      <geom name="yellow_chair_back" type="mesh" class="collision" priority="6" mesh="yellow_chair_back" friction="0.3 0.2 0.2"/>
+      <geom name="yellow_chair_seat" type="mesh" class="collision" priority="6" mesh="yellow_chair_seat" friction="0.3 0.2 0.2"/>
+      <geom name="yellow_chair_rollers" type="cylinder" size="0.20 0.1" pos="0 0 0.09" class="collision" priority="8" friction="0.05 0.2 0.2"/>
+      <site name="site_object" pos="0 0.06 0.4" size="0.01"/>
+    </body>
+
+    <!-- Ramp (static) -->
+    <body name="ramp" pos="3.090 5.412 0" quat="0 0 0 1">
+      <geom name="ramp_box1" type="box" size="1.215 0.61 0.125" pos="1.215 0.61 0.125" friction="0.6" priority="5" rgba="0.5 0.5 0.5 1"/>
+      <geom name="ramp_box2" type="box" size="1.215 0.95 0.125" pos="1.215 2.14685948 0.00698456" quat="0.998 -0.0628 0 0" friction="0.6" priority="5" rgba="0.5 0.5 0.5 1"/>
+      <geom name="ramp_cyl3" type="cylinder" size="0.05" fromto="0 1.22 0.203 2.43 1.22 0.203" friction="0.6" priority="5" rgba="0.5 0.5 0.5 1"/>
+    </body>
+  </worldbody>
+
+  <include file="../spot_primitive/actuator.xml" />
+  <include file="../spot_primitive/contact.xml" />
+
+  <sensor>
+    <framepos name="sensor_body" objtype="site" objname="site_body"/>
+    <framexaxis name="body_x_axis" objtype="site" objname="site_body"/>
+    <framexaxis name="object_x_axis" objtype="site" objname="site_object"/>
+    <frameyaxis name="object_y_axis" objtype="site" objname="site_object"/>
+    <framezaxis name="object_z_axis" objtype="site" objname="site_object"/>
+    <framepos name="trace_fngr_site" objtype="site" objname="site_arm_link_fngr"/>
+    <framexaxis name="gripper_x_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <frameyaxis name="gripper_y_axis" objtype="site" objname="site_arm_link_wr1"/>
+    <framexaxis name="finger_x_axis" objtype="site" objname="site_arm_link_fngr"/>
+    <framepos name="fl_pos" objtype="site" objname="site_front_left"/>
+    <framepos name="fr_pos" objtype="site" objname="site_front_right"/>
+    <framepos name="hl_pos" objtype="site" objname="site_rear_left"/>
+    <framepos name="hr_pos" objtype="site" objname="site_rear_right"/>
+  </sensor>
+</mujoco>
