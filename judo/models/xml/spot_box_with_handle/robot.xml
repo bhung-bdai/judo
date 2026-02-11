@@ -12,7 +12,7 @@
     <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5" dir="0 0 -1" castshadow="false"/>
     <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1"/>
 
-    <geom name="ground" type="plane" size="10 10 0.01" class="collision" priority="5" friction="0.7" material="blue_grid"/>
+    <geom name="ground" type="plane" size="10 10 0.01" class="collision" priority="5" friction="0.8" material="blue_grid"/>
 
     <body name="body" pos="0 0 0.52">
       <include file="../spot_primitive/body.xml" />
@@ -24,11 +24,11 @@
     <body name="box_with_handle_body" pos="2 0 0.275">
       <joint name="box_with_handle_joint" type="free"/>
       <inertial pos="0 0 0" mass="1.72" diaginertia="0.1445 0.1445 0.1445"/>
-      <geom name="box" type="box" size="0.275 0.275 0.275" class="collision" priority="3"/>
+      <geom name="box" type="box" size="0.275 0.275 0.275" class="collision"/>
       <geom name="box_visual" type="box" size="0.275 0.275 0.275" class="visual" rgba="0.5 0.3 0.1 1"/>
-      <geom name="handle_left" type="capsule" size="0.0125 0.05" pos="0 0.1125 0.325" class="collision" priority="3"/>
-      <geom name="handle_right" type="capsule" size="0.0125 0.05" pos="0 -0.1125 0.325" class="collision" priority="3"/>
-      <geom name="handle_top" type="capsule" size="0.0125 0.1125" pos="0 0 0.3875" quat="0.707 0.707 0 0" class="collision" priority="3"/>
+      <geom name="handle_left" type="capsule" size="0.0125 0.05" pos="0 0.1125 0.325" class="collision"/>
+      <geom name="handle_right" type="capsule" size="0.0125 0.05" pos="0 -0.1125 0.325" class="collision"/>
+      <geom name="handle_top" type="capsule" size="0.0125 0.1125" pos="0 0 0.3875" quat="0.707 0.707 0 0" class="collision"/>
       <site name="site_object" pos="0 0 -0.3" size="0.01"/>
     </body>
   </worldbody>
