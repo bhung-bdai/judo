@@ -1,10 +1,8 @@
 # Copyright (c) 2025 Robotics and AI Institute LLC. All rights reserved.
 
-import ctypes
-import os
-
-import mujoco
-
+# Import mujoco first to ensure libmujoco.so is loaded into the process
+# before the pybind module tries to resolve it as a dynamic dependency.
+import mujoco as _mujoco  # noqa: F401
 
 from mujoco_extensions import policy_rollout
 

@@ -39,15 +39,20 @@ System::System(const std::string& policy_filepath_, const mjModel* reference_mod
       default_joint_pos_(19),
       joint_pos_(19),
       joint_vel_(19) {
-  // Initialize the permutation matrices
   initializeSystemIndices();
   zeroOutVectors();
 
+  if (!reference_model) {
+    throw std::runtime_error("System: reference_model is null");
+  }
   model = mj_copyModel(nullptr, reference_model);
   if (!model) {
-    throw std::runtime_error("Failed to load copy XML file");
+    throw std::runtime_error("Failed to copy MuJoCo model");
   }
   data = mj_makeData(model);
+  if (!data) {
+    throw std::runtime_error("Failed to create MuJoCo data");
+  }
   setStateIndices();
 
   loadPolicy(policy_filepath, reference_session);
@@ -83,12 +88,29 @@ void System::zeroOutVectors() {
 }
 
 void System::setStateIndices() {
-  int base_id = mj_name2id(model, mjOBJ_BODY, "body");                        // id of the base
-  base_qpos_start_idx = model->jnt_qposadr[model->body_jntadr[base_id]];      // base position address
-  base_qvel_start_idx = model->jnt_dofadr[model->body_jntadr[base_id]];       // base velocity address
-  int first_leg_id = mj_name2id(model, mjOBJ_BODY, "front_left_hip");         // id of the first leg
-  leg_qpos_start_idx = model->jnt_qposadr[model->body_jntadr[first_leg_id]];  // leg position address
-  leg_qvel_start_idx = model->jnt_dofadr[model->body_jntadr[first_leg_id]];   // leg velocity address
+  // Look up base body — try with and without "spot/" prefix
+  int base_id = mj_name2id(model, mjOBJ_BODY, "body");
+  if (base_id < 0) base_id = mj_name2id(model, mjOBJ_BODY, "spot/body");
+  if (base_id < 0) {
+    throw std::runtime_error("setStateIndices: body 'body' (or 'spot/body') not found in model");
+  }
+  if (model->body_jntadr[base_id] < 0) {
+    throw std::runtime_error("setStateIndices: base body has no joints");
+  }
+  base_qpos_start_idx = model->jnt_qposadr[model->body_jntadr[base_id]];
+  base_qvel_start_idx = model->jnt_dofadr[model->body_jntadr[base_id]];
+
+  // Look up first leg body — try with and without "spot/" prefix
+  int first_leg_id = mj_name2id(model, mjOBJ_BODY, "front_left_hip");
+  if (first_leg_id < 0) first_leg_id = mj_name2id(model, mjOBJ_BODY, "spot/front_left_hip");
+  if (first_leg_id < 0) {
+    throw std::runtime_error("setStateIndices: body 'front_left_hip' (or 'spot/front_left_hip') not found in model");
+  }
+  if (model->body_jntadr[first_leg_id] < 0) {
+    throw std::runtime_error("setStateIndices: front_left_hip body has no joints");
+  }
+  leg_qpos_start_idx = model->jnt_qposadr[model->body_jntadr[first_leg_id]];
+  leg_qvel_start_idx = model->jnt_dofadr[model->body_jntadr[first_leg_id]];
 }
 
 void System::loadPolicy(const std::string& policy_filepath_,
@@ -372,25 +394,20 @@ std::vector<std::shared_ptr<SystemClass::System>> create_systems_vector(const mj
   // Vector to store the systems
   std::vector<std::shared_ptr<SystemClass::System>> systems(num_systems);
 
-  std::shared_ptr<OnnxInterface::Session> reference_session =
-      std::shared_ptr<OnnxInterface::Session>(OnnxInterface::allocateOrtSession(policy_filepath));
-  // Function to create a system in a separate thread
-  auto create_system = [&](int i) {
-    systems[i] = std::make_shared<SystemClass::System>(policy_filepath, reference_model, reference_session);
-  };
-
-  // Vector to hold the threads
-  std::vector<std::thread> threads;
-  threads.reserve(num_systems);
-
-  // Launch threads to create System instances in parallel
-  for (int i = 0; i < num_systems; i++) {
-    threads.emplace_back(create_system, i);
+  if (!reference_model) {
+    throw std::runtime_error("create_systems_vector: reference_model is null");
   }
 
-  // Wait for all threads to finish
-  for (auto& thread : threads) {
-    thread.join();
+  std::shared_ptr<OnnxInterface::Session> reference_session;
+  try {
+    reference_session = OnnxInterface::allocateOrtSession(policy_filepath);
+  } catch (const std::exception& e) {
+    throw std::runtime_error(std::string("create_systems_vector: failed to create ONNX session: ") + e.what());
+  }
+
+  // Create systems sequentially — mj_copyModel is not thread-safe
+  for (int i = 0; i < num_systems; i++) {
+    systems[i] = std::make_shared<SystemClass::System>(policy_filepath, reference_model, reference_session);
   }
 
   return systems;

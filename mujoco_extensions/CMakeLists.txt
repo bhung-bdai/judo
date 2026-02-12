@@ -50,8 +50,18 @@ execute_process(
   OUTPUT_VARIABLE SITE_PACKAGES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# Find ONNX Runtime from conda/pixi environment
-if(DEFINED ENV{CONDA_PREFIX})
+# Find ONNX Runtime: check -DONNXRUNTIME_DIR first, then CONDA_PREFIX
+if(DEFINED ONNXRUNTIME_DIR)
+  # Use explicitly provided onnxruntime directory (e.g. from starfish or a downloaded release)
+  file(GLOB ONNXRUNTIME_LIB_FILES "${ONNXRUNTIME_DIR}/lib/libonnxruntime.so*")
+  if(ONNXRUNTIME_LIB_FILES)
+    list(GET ONNXRUNTIME_LIB_FILES 0 ONNXRUNTIME_LIB)
+  else()
+    message(FATAL_ERROR "ONNX Runtime library not found in ${ONNXRUNTIME_DIR}/lib")
+  endif()
+  set(ONNXRUNTIME_INCLUDE "${ONNXRUNTIME_DIR}/include")
+  set(ONNXRUNTIME_LIB_DIR "${ONNXRUNTIME_DIR}/lib")
+elseif(DEFINED ENV{CONDA_PREFIX})
   set(CONDA_PREFIX $ENV{CONDA_PREFIX})
   file(GLOB ONNXRUNTIME_LIB_FILES "${CONDA_PREFIX}/lib/libonnxruntime.so*")
   if(ONNXRUNTIME_LIB_FILES)
@@ -61,8 +71,9 @@ if(DEFINED ENV{CONDA_PREFIX})
   endif()
   # ONNX Runtime headers are in onnxruntime/core/session subdirectory
   set(ONNXRUNTIME_INCLUDE "${CONDA_PREFIX}/include/onnxruntime/core/session")
+  set(ONNXRUNTIME_LIB_DIR "${CONDA_PREFIX}/lib")
 else()
-  message(FATAL_ERROR "CONDA_PREFIX not set. Please run within pixi environment.")
+  message(FATAL_ERROR "Set -DONNXRUNTIME_DIR or CONDA_PREFIX to find ONNX Runtime.")
 endif()
 
 message(STATUS "MuJoCo library: ${MUJOCO_LIB}")

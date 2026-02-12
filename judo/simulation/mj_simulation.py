@@ -2,6 +2,7 @@
 
 """MuJoCo Simulation with optional locomotion policy support."""
 
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +12,13 @@ from omegaconf import DictConfig
 from judo.app.structs import MujocoState
 from judo.simulation.base import Simulation
 from judo.tasks.spot.spot_constants import DEFAULT_SPOT_ROLLOUT_CUTOFF_TIME, POLICY_OUTPUT_DIM
-from mujoco_extensions.policy_rollout import create_systems_vector, threaded_rollout  # type: ignore
+
+try:
+    from mujoco_extensions.policy_rollout import create_systems_vector, threaded_rollout  # type: ignore
+except (ImportError, OSError) as e:
+    logging.warning("Failed to import mujoco_extensions: %s", e)
+    create_systems_vector = None
+    threaded_rollout = None
 
 
 class MJSimulation(Simulation):
@@ -51,6 +58,12 @@ class MJSimulation(Simulation):
         Args:
             policy_path: Path to the ONNX locomotion policy file.
         """
+        if create_systems_vector is None:
+            logging.warning(
+                "mujoco_extensions not available. Spot locomotion policy stepping will use direct control fallback. "
+                "Build with: pixi run -e dev cmake --build mujoco_extensions/build"
+            )
+            return
         self._systems = create_systems_vector(
             self.task.model,  # Pass the MjModel directly
             str(policy_path),
@@ -170,4 +183,15 @@ class MJSimulation(Simulation):
     @property
     def last_policy_output(self) -> np.ndarray:
         """Returns the last policy output (leg joint actions)."""
+        return self._last_policy_output.copy()
+
+    @property
+    def previous_actions(self) -> np.ndarray | None:
+        """Returns the previous locomotion policy actions for syncing to rollout backend.
+
+        Returns None for non-Spot tasks (no locomotion policy), or the last
+        policy output (12-dim leg actions) for Spot tasks.
+        """
+        if not self.task.uses_locomotion_policy:
+            return None
         return self._last_policy_output.copy()
