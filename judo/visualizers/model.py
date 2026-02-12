@@ -35,6 +35,48 @@ DEFAULT_SPLINE_COLOR = (0.8, 0.1, 0.8)
 DEFAULT_BEST_SPLINE_COLOR = (0.96, 0.7, 0.0)
 
 
+def _spec_geom_full_quat(geom: Any) -> np.ndarray:
+    """Compute the full orientation quaternion for a spec geom.
+
+    MuJoCo's spec stores orientation differently depending on the XML attribute used
+    (quat, euler, axisangle, etc). When euler is used, geom.quat is identity and the
+    rotation is stored in geom.alt.euler. This function returns the full combined quaternion.
+    """
+    base_quat = np.array(geom.quat, dtype=np.float64)
+    alt = geom.alt
+
+    if alt.type == mujoco.mjtOrientation.mjORIENTATION_QUAT:
+        return base_quat
+
+    if alt.type == mujoco.mjtOrientation.mjORIENTATION_EULER:
+        # MuJoCo default eulerseq="xyz" (extrinsic XYZ = intrinsic ZYX)
+        e = alt.euler
+        cx, sx = np.cos(e[0] / 2), np.sin(e[0] / 2)
+        cy, sy = np.cos(e[1] / 2), np.sin(e[1] / 2)
+        cz, sz = np.cos(e[2] / 2), np.sin(e[2] / 2)
+        alt_quat = np.array([
+            cx * cy * cz + sx * sy * sz,
+            sx * cy * cz - cx * sy * sz,
+            cx * sy * cz + sx * cy * sz,
+            cx * cy * sz - sx * sy * cz,
+        ])
+    elif alt.type == mujoco.mjtOrientation.mjORIENTATION_AXISANGLE:
+        aa = alt.axisangle
+        axis_norm = np.linalg.norm(aa[:3])
+        if axis_norm > 0:
+            axis = aa[:3] / axis_norm
+            angle = aa[3] if aa[3] != 0 else axis_norm
+        else:
+            return base_quat
+        alt_quat = np.array([np.cos(angle / 2), *(np.sin(angle / 2) * axis)])
+    else:
+        return base_quat
+
+    result = np.zeros(4)
+    mujoco.mju_mulQuat(result, base_quat, alt_quat)
+    return result
+
+
 class ViserMjModel:
     """Helper for rendering MJCF models in viser.
 
@@ -112,8 +154,8 @@ class ViserMjModel:
                     add_plane(
                         self._target,
                         geom_name,
-                        pos=geom.pos,
-                        quat=geom.quat,
+                        pos=model_geom.pos,
+                        quat=model_geom.quat,
                     )
                 )
             case mujoco.mjtGeom.mjGEOM_HFIELD:
@@ -125,8 +167,8 @@ class ViserMjModel:
                         self._target,
                         geom_name,
                         radius=model_geom.size[0],
-                        pos=geom.pos,
-                        quat=geom.quat,
+                        pos=model_geom.pos,
+                        quat=model_geom.quat,
                         rgba=model_geom.rgba,
                     )
                 )
@@ -175,13 +217,16 @@ class ViserMjModel:
                 # Introspect on texture.
                 mjs_material = self._spec.material(geom.material)
 
+                # Use full quaternion (geom.quat is identity when euler is specified)
+                full_quat = _spec_geom_full_quat(geom)
+
                 # Call the new, robust function to add the mesh.
                 handle = add_mesh_from_file(
                     target=self._target,
                     name=geom_name,
                     mesh_file=mesh_file,
                     pos=geom.pos,
-                    quat=geom.quat,
+                    quat=full_quat,
                     mesh_scale=mesh_scale,
                     mjs_material=mjs_material,
                     spec=self._spec,
