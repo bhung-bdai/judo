@@ -140,6 +140,11 @@ class MJSimulation(Simulation):
         # Update last policy output for continuity
         self._last_policy_output = np.array(policy_outputs[0])
 
+    def reset(self) -> None:
+        """Reset the simulation: task state and internal policy state."""
+        self.task.reset()
+        self._last_policy_output = np.zeros(POLICY_OUTPUT_DIM)
+
     def reset_policy_state(self) -> None:
         """Reset the internal policy state to zeros."""
         self._last_policy_output = np.zeros(POLICY_OUTPUT_DIM)

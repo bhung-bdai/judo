@@ -561,8 +561,10 @@ class BatchedControllers:
         # Collect x0 from all controllers: shape (num_problems, x0_dim)
         x0_stacked = np.stack([ctrl.current_state for ctrl in self.controllers], axis=0)
 
-        # Collect controls from all controllers: shape (num_problems * num_threads, horizon, nu)
-        controls_batched = np.concatenate([ctrl.rollout_controls for ctrl in self.controllers], axis=0)
+        # Convert task-space controls to sim-space, then batch: shape (num_problems * num_threads, horizon, model.nu)
+        controls_batched = np.concatenate(
+            [ctrl.task.task_to_sim_ctrl(ctrl.rollout_controls) for ctrl in self.controllers], axis=0
+        )
 
         # Execute the batched rollout
         all_states, all_sensors = self.rollout_backend.rollout(

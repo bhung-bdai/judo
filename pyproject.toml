@@ -30,7 +30,7 @@ classifiers = [
 
 dependencies = [
     "dora-utils",  # dora + qol utils for writing nodes
-    "mujoco>=3.5.0,<3.6",
+    "mujoco==3.4.0",
     "numpy",
     "pillow",  # for displaying app logo
     "pycparser",
@@ -211,7 +211,7 @@ judo-rai = { path = ".", editable = true }
 # Build mujoco_extensions C++ module
 configure-mujoco-ext = { cmd = "cmake -B mujoco_extensions/build -S mujoco_extensions", description = "Configure mujoco_extensions cmake build" }
 build-mujoco-ext = { cmd = "cmake --build mujoco_extensions/build -j8", depends-on = ["configure-mujoco-ext"], description = "Build mujoco_extensions pybind modules" }
-clean-mujoco-ext = { cmd = "rm -rf mujoco_extensions/build mujoco_extensions/policy_rollout/*.so", description = "Clean mujoco_extensions build artifacts" }
+clean-mujoco-ext = { cmd = "rm -rf mujoco_extensions/build && find mujoco_extensions/policy_rollout -name '*.so' -delete 2>/dev/null; true", description = "Clean mujoco_extensions build artifacts" }
 upload-meshes = { cmd = "bash scripts/upload_meshes.sh", description = "Zip and upload meshes to latest GitHub release" }
 build-wheel = { cmd = "rm -rf dist && python -m build --wheel --outdir dist && bash scripts/repair_wheel.sh dist/*.whl wheelhouse \"\" $(python -c \"import sys; print(f'cp{sys.version_info[0]}{sys.version_info[1]}')\")", depends-on = ["clean-mujoco-ext", "build-mujoco-ext"], description = "Build manylinux wheel with auditwheel" }
 

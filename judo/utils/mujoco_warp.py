@@ -163,7 +163,6 @@ class RolloutBackend:
         assert full_states.shape[-1] == nq + nv + 1
         assert full_states.ndim == 2
         assert controls.ndim == 3
-        assert controls.shape[-1] == nu
         assert controls.shape[0] == num_worlds
 
         # CPU -> GPU copy
@@ -206,12 +205,16 @@ class RolloutBackend:
                     cmd_torch, qpos_torch, qvel_torch, previous_actions_torch
                 )
 
-            # Compute PD torques
-            q_torch = qpos_torch[:, 7:]
-            dq_torch = qvel_torch[:, 6:]
+            # Compute PD torques for the controlled joints only
+            n_controlled = target_q_torch.shape[-1]
+            q_torch = qpos_torch[:, 7:7 + n_controlled]
+            dq_torch = qvel_torch[:, 6:6 + n_controlled]
             tau = self.pd_controller.compute_batch(target_q_torch, q_torch, dq_torch)
 
-            torques_wp = wp.from_torch(tau)
+            # Pad to full actuator dimension (uncontrolled actuators get zero torque)
+            full_tau = torch.zeros(num_worlds, nu, device=tau.device, dtype=tau.dtype)
+            full_tau[:, :n_controlled] = tau
+            torques_wp = wp.from_torch(full_tau)
 
             wp.copy(self.mjw_data.ctrl, torques_wp)
 
