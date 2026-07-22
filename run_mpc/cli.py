@@ -106,6 +106,7 @@ def run_mpc(config: PublicMPCConfig) -> None:
         save_results_to_h5(output_path, all_results, size_data, config, config_path, json_configs, num_parallel)
         timers.h5_write.toc()
         logging.info(f"Saved {len(all_results)} trajectories to {output_path}")
+    logging.info(f"Task timestep: {size_data.task_timestep}")
     timers.print_all()
     logging.info("=== Rollout Backend Statistics ===")
     batched_controllers.print_timer_stats()

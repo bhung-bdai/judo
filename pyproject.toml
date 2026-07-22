@@ -212,6 +212,15 @@ gxx_linux-64 = "13.*"
 [tool.pixi.pypi-dependencies]
 judo-rai = { path = ".", editable = true }
 
+# Linux + Windows: CUDA wheels
+[tool.pixi.target.linux-64.pypi-dependencies]
+torch = { version = "==2.7.1+cu128", index = "https://download.pytorch.org/whl/cu128" }
+[tool.pixi.target.win-64.pypi-dependencies]
+torch = { version = "==2.7.1+cu128", index = "https://download.pytorch.org/whl/cu128" }
+# macOS: CPU only (no CUDA)
+[tool.pixi.target.osx-arm64.pypi-dependencies]
+torch = { version = "==2.7.1", index = "https://download.pytorch.org/whl/cpu" }
+
 [tool.pixi.tasks]
 # Build mujoco_extensions C++ module
 configure = { cmd = "cmake -B mujoco_extensions/build -S mujoco_extensions", description = "Configure mujoco_extensions cmake build" }
@@ -237,7 +246,7 @@ python = "3.13.*"
 [tool.pixi.feature.mjwarp.dependencies]
 python = ">=3.11,<3.14"
 [tool.pixi.feature.mjwarp.target.linux-64.pypi-dependencies]
-mujoco_warp = ">=3.6.0,<3.7"
+mujoco_warp = ">=3.5.0,<3.6"
 onnx = "*"
 onnxruntime-gpu = ">=1.24"
 

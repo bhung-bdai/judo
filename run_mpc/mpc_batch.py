@@ -12,6 +12,7 @@ from tqdm import tqdm
 from judo.app.structs import RenderPose
 from judo.controller import BatchedControllers as JudoBatchedController
 from judo.controller import Controller as JudoController
+from judo.controller.controller import Controller
 from judo.simulation.hierarchical_mj_simulation import HierarchicalMJSimulation
 from judo.simulation.mj_simulation import MJSimulation
 from judo.visualizers.visualizer import Visualizer
@@ -96,7 +97,7 @@ class _BatchStorage:
 
     def record_mpc_step(self, mpc_step: int, task_step: int, controllers: list[JudoController]) -> None:
         """Record rollout / viapoint data for all controllers at one MPC step."""
-        for i, ctrl in enumerate(controllers):
+        for i, ctrl in enumerate[Controller](controllers):
             if self.rollout_states is not None:
                 self.control_timesteps[i, mpc_step] = task_step  # type: ignore[index]
                 self.rollout_states[i, mpc_step] = ctrl.states
@@ -105,13 +106,14 @@ class _BatchStorage:
             if self.control_viapoints is not None:
                 self.control_viapoints[i, mpc_step] = ctrl.spline.y
 
-    def package_results(self, max_num_task_steps: int) -> list[dict[str, np.ndarray | int]]:
+    def package_results(self, max_num_task_steps: int, task_timestep: float) -> list[dict[str, np.ndarray | int]]:
         """Package per-trajectory result dicts from stored arrays."""
         num_parallel = self.qpos.shape[0]
         results: list[dict[str, np.ndarray | int]] = []
         for i in range(num_parallel):
             result: dict[str, np.ndarray | int] = {
                 "task_step": max_num_task_steps,
+                "task_timestep": task_timestep,
                 "qpos": self.qpos[i],
                 "qvel": self.qvel[i],
                 "control": self.control[i],
@@ -205,7 +207,7 @@ def run_mpc_batch(
             update_visualization(vis, sims[0].render_pose, controllers[0].traces)
             time.sleep(sims[0].timestep)
 
-    results = storage.package_results(config.max_num_task_steps)
+    results = storage.package_results(config.max_num_task_steps, size_data.task_timestep)
     for i, sim in enumerate(sims):
         results[i]["success"] = sim.task.success(sim.task.model, sim.task.data)
         if hasattr(sim.task.config, "goal_pos"):

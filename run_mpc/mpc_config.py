@@ -76,6 +76,7 @@ class SizeData:
     chunk_size: int
     num_timesteps: int
     sim_steps_per_mpc_step: int
+    task_timestep: float
 
 
 def make_size_data(sim: MJSimulation, controller: JudoController, config: PublicMPCConfig) -> SizeData:
@@ -86,6 +87,7 @@ def make_size_data(sim: MJSimulation, controller: JudoController, config: Public
     else:
         control_freq = config.control_freq
     sim_steps_per_mpc_step = int(1.0 / control_freq / sim.task.dt)
+    task_timestep = sim.task.dt
     max_num_mpc_steps = np.ceil(config.max_num_task_steps / sim_steps_per_mpc_step).astype(int)
     nq = sim.task.model.nq
     nv = sim.task.model.nv
@@ -93,6 +95,7 @@ def make_size_data(sim: MJSimulation, controller: JudoController, config: Public
     num_nodes = controller.optimizer_cfg.num_nodes
     num_rollouts = controller.optimizer_cfg.num_rollouts
     return SizeData(
+        task_timestep=task_timestep,
         max_num_mpc_steps=max_num_mpc_steps,
         nq=nq,
         nv=nv,

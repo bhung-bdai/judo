@@ -125,6 +125,11 @@ def save_results_to_h5(
         trajectory_length_dataset = f.create_dataset(
             "trajectory_length", shape=(size_data.num_trajectories,), chunks=(size_data.chunk_size), dtype="int"
         )
+        task_timestep_dataset = f.create_dataset(
+            "task_timestep",
+            shape=(size_data.num_trajectories,),
+            dtype="float",
+        )
 
         if config.store_rollouts:
             rollout_states_dataset = f.create_dataset(
@@ -204,6 +209,7 @@ def save_results_to_h5(
         # Write results
         for traj_idx, result in enumerate(all_results):
             trajectory_length_dataset[traj_idx] = result["task_step"]
+            task_timestep_dataset[traj_idx] = result["task_timestep"]
             qpos_dataset[traj_idx] = result["qpos"]
             qvel_dataset[traj_idx] = result["qvel"]
             control_dataset[traj_idx] = result["control"]

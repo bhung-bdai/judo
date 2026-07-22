@@ -44,6 +44,17 @@ def visualize_trajectory_hdf5_dataset(dataset_path: Path) -> None:
         visualize_trajectory_batch(str(task_name), qpos_dataset, trajectory_length_dataset, goal_positions)
 
 
+# def visualize_dynamics_learning_model_output(model_path: Path) -> None:
+#     """
+#     with h5py.File(str(dataset_path), "r") as f:
+#         task_name = f.attrs["task"]
+#         qpos_dataset: h5py.Dataset = f["qpos"]  # type: ignore[assignment]
+#         trajectory_length_dataset: h5py.Dataset = f["trajectory_length"]  # type: ignore[assignment]
+#         goal_positions = np.array(f["goal_pos"]) if "goal_pos" in f else None
+
+#         visualize_trajectory_batch(str(task_name), qpos_dataset, trajectory_length_dataset, goal_positions)
+
+
 def visualize_trajectory_batch(
     task: str,
     qpos_batch: np.ndarray | h5py.Dataset,
