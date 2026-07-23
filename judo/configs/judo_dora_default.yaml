@@ -91,6 +91,8 @@ node_definitions:
     controller_override_cfg: ${controller_config_overrides}
     optimizer_override_cfg: ${optimizer_config_overrides}
     sim_pause_button: true
+    ghost_vis: true
+    ghost_opacity: 0.35
   controller:
     _target_: judo.app.dora.controller_node.ControllerNode
     node_id: controller

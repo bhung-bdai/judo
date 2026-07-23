@@ -40,6 +40,8 @@ class Visualizer:
         sim_pause_button: bool = True,
         geom_exclude_substring: str = "collision",
         available_tasks: dict[str, TaskRegistration] | None = None,
+        ghost_vis: bool = False,
+        ghost_opacity: float = 0.35,
     ) -> None:
         """Initialize the visualization node."""
         # handling custom task and optimizer registration
@@ -53,6 +55,9 @@ class Visualizer:
         self.available_tasks = available_tasks or get_registered_tasks()
         self.available_optimizers = get_registered_optimizers()
         self.geom_exclude_substring = geom_exclude_substring
+        self.ghost_vis = ghost_vis
+        self.ghost_opacity = ghost_opacity
+        self.ghost_model: ViserMjModel | None = None
 
         self.task_name = ""
         self.optimizer_name = ""
@@ -109,11 +114,24 @@ class Visualizer:
         self.task = task_entry.task_type()
         self.task_config = self.task.config
         self.data = mujoco.MjData(self.task.model)
+        self.ghost_data = None
+        self.ghost_model = None
         self.viser_model = ViserMjModel(
             self.server,
             self.task.spec,
             geom_exclude_substring=self.geom_exclude_substring,
         )
+        if self.ghost_vis:
+            self.ghost_data = mujoco.MjData(self.task.model)
+            self.ghost_model = ViserMjModel(
+                self.server,
+                self.task.spec,
+                geom_exclude_substring=self.geom_exclude_substring,
+                show_ground_plane=False,
+                show_traces=False,
+                name_prefix="ghost/",
+                opacity=self.ghost_opacity,
+            )
 
         optimizer_entry = self.available_optimizers.get(optimizer_name)
         if optimizer_entry is None:
@@ -144,6 +162,12 @@ class Visualizer:
         self.controller_config_updated.set()
         self.task_config_updated.set()
         self.optimizer_config_updated.set()
+
+    def set_model_pose(self) -> None:
+        """Push the current MjData pose into the primary or ghost viser model."""
+        if self.ghost_model is not None and self.ghost_data is not None:
+            self.ghost_model.set_data(self.ghost_data)
+        self.viser_model.set_data(self.data)
 
     def setup_gui(self) -> None:
         """Set up the GUI for the visualization node."""
@@ -354,6 +378,10 @@ class Visualizer:
             else:
                 v.remove()
         self.viser_model.remove()
+        if self.ghost_model is not None:
+            self.ghost_model.remove()
+            self.ghost_model = None
+        self.ghost_data = None
 
     def cleanup(self) -> None:
         """Cleanup the visualization node."""

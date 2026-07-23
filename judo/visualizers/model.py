@@ -9,7 +9,7 @@ import trimesh
 from mujoco import MjData, MjsMaterial, MjSpec
 from trimesh.creation import box, capsule, cylinder, icosphere
 from trimesh.transformations import scale_and_translate
-from trimesh.visual import TextureVisuals
+from trimesh.visual import ColorVisuals, TextureVisuals
 from trimesh.visual.material import PBRMaterial
 from viser import (
     ClientHandle,
@@ -43,6 +43,9 @@ class ViserMjModel:
         spec: MjSpec of the model to be visualized.
         show_ground_plane: optional flag to show the default ground plane.
         geom_exclude_substring: optional string to exclude a geom from visualization.
+        name_prefix: optional prefix for all scene node names (for overlays on the same server).
+        opacity: optional alpha multiplier applied to all geoms (1.0 = fully opaque).
+        show_traces: optional flag to enable rollout trace visualization.
     """
 
     def __init__(
@@ -51,10 +54,16 @@ class ViserMjModel:
         spec: MjSpec,
         show_ground_plane: bool = True,
         geom_exclude_substring: str = "",
+        name_prefix: str = "",
+        opacity: float = 1.0,
+        show_traces: bool = True,
     ) -> None:
         """Constructor for ViserMjModel."""
         self._target = target
         self._spec = spec
+        self._name_prefix = name_prefix
+        self._opacity = opacity
+        self._show_traces = show_traces
 
         # give default names to any unnamed geoms and bodies
         _geom_placeholder_idx = 0
@@ -77,21 +86,21 @@ class ViserMjModel:
         self._model = spec.compile()
 
         # Assume first body is root of kinematic tree.
-        self._bodies = [self._target.scene.add_frame(self._spec.bodies[0].name, show_axes=False)]
+        self._bodies = [self._target.scene.add_frame(self._prefixed_name(self._spec.bodies[0].name), show_axes=False)]
         self._geoms: List = []
 
         # Show world plane if desired.
         if show_ground_plane:
-            self._geoms.append(add_plane(self._target, "ground_plane"))
+            self._geoms.append(add_plane(self._target, self._prefixed_name("ground_plane")))
 
         # Add coordinate frame for each non-world body in model.
         for body in self._spec.bodies[1:]:
             # Sharp edge: not using the tree structure of the kinematics ...
             body_name = body.name
-            self._bodies.append(self._target.scene.add_frame(body_name, show_axes=False))
+            self._bodies.append(self._target.scene.add_frame(self._prefixed_name(body_name), show_axes=False))
 
             for geom in body.geoms:
-                geom_name = f"{body_name}/geom_{geom.name}"
+                geom_name = f"{self._prefixed_name(body_name)}/geom_{geom.name}"
                 if geom_exclude_substring and geom_exclude_substring in geom_name:
                     continue
                 self.add_geom(geom_name, geom)
@@ -99,7 +108,21 @@ class ViserMjModel:
         # Add traces
         self._num_trace_sensors = count_trace_sensors(self._model)
         self.all_traces_rollout_size = 0
-        self.add_traces()
+        self._traces: List = []
+        if self._show_traces:
+            self.add_traces()
+
+    def _prefixed_name(self, name: str) -> str:
+        """Prefix scene node names so multiple models can share one server."""
+        return f"{self._name_prefix}{name}" if self._name_prefix else name
+
+    def _apply_opacity(self, rgba: np.ndarray) -> np.ndarray:
+        """Scale alpha channel for semi-transparent overlays such as ghost models."""
+        if self._opacity >= 1.0:
+            return rgba
+        rgba_scaled = np.array(rgba, copy=True)
+        rgba_scaled[..., -1] *= self._opacity
+        return rgba_scaled
 
     def add_geom(self, geom_name: str, geom: Any) -> None:
         """Helper function for adding geoms to scene tree."""
@@ -127,7 +150,7 @@ class ViserMjModel:
                         radius=model_geom.size[0],
                         pos=geom.pos,
                         quat=geom.quat,
-                        rgba=model_geom.rgba,
+                        rgba=self._apply_opacity(model_geom.rgba),
                     )
                 )
             case mujoco.mjtGeom.mjGEOM_CAPSULE:
@@ -139,7 +162,7 @@ class ViserMjModel:
                         length=2 * model_geom.size[1],  # MJC has capsule half-lengths.
                         pos=model_geom.pos,
                         quat=model_geom.quat,
-                        rgba=model_geom.rgba,
+                        rgba=self._apply_opacity(model_geom.rgba),
                     )
                 )
             case mujoco.mjtGeom.mjGEOM_ELLIPSOID:
@@ -153,7 +176,7 @@ class ViserMjModel:
                         height=2 * model_geom.size[1],
                         pos=model_geom.pos,
                         quat=model_geom.quat,
-                        rgba=model_geom.rgba,
+                        rgba=self._apply_opacity(model_geom.rgba),
                     )
                 )
             case mujoco.mjtGeom.mjGEOM_BOX:
@@ -164,7 +187,7 @@ class ViserMjModel:
                         size=2 * model_geom.size,  # MJC has box half-lengths.
                         pos=model_geom.pos,
                         quat=model_geom.quat,
-                        rgba=model_geom.rgba,
+                        rgba=self._apply_opacity(model_geom.rgba),
                     )
                 )
             case mujoco.mjtGeom.mjGEOM_MESH:
@@ -185,6 +208,7 @@ class ViserMjModel:
                     mesh_scale=mesh_scale,
                     mjs_material=mjs_material,
                     spec=self._spec,
+                    opacity=self._opacity,
                 )
                 self._geoms.append(handle)
             case mujoco.mjtGeom.mjGEOM_SDF:
@@ -264,6 +288,9 @@ class ViserMjModel:
             traces: trace sensors readings of size (self.num_elite * all_traces_rollout_size, 2, 3).
             all_traces_rollout_size: num_trace_sensors * single_rollout, size of all grouped trace sensor rollouts.
         """
+        if not self._show_traces:
+            return
+
         # Erase all traces if None is received
         if traces is None or self._num_trace_sensors == 0:
             self.remove_traces()
@@ -439,6 +466,7 @@ def add_mesh_from_file(
     mesh_scale: np.ndarray | None = None,
     mjs_material: MjsMaterial | None = None,
     spec: MjSpec | None = None,
+    opacity: float = 1.0,
 ) -> SceneNodeHandle:
     """Add a triangle mesh from file, via trimesh."""
     if not mesh_file.exists():
@@ -450,6 +478,9 @@ def add_mesh_from_file(
 
     if mjs_material is not None and has_material(mesh):
         apply_mujoco_material(mesh, mjs_material, spec, mesh_file)
+
+    if opacity < 1.0:
+        scale_mesh_opacity(mesh, opacity)
 
     return target.scene.add_mesh_trimesh(name, mesh, position=pos, wxyz=quat)
 
@@ -527,6 +558,31 @@ def set_mesh_color(mesh: trimesh.Trimesh, rgba: np.ndarray) -> None:
             alphaMode="BLEND" if rgba[-1] < 255 else "OPAQUE",
         )
     )
+
+
+def scale_mesh_opacity(mesh: trimesh.Trimesh, opacity: float) -> None:
+    """Scale the alpha channel of an existing trimesh material."""
+    if opacity >= 1.0:
+        return
+
+    visual = mesh.visual
+    if isinstance(visual, TextureVisuals) and visual.material is not None:
+        material = visual.material
+        for attr in ("baseColorFactor", "main_color"):
+            color = getattr(material, attr, None)
+            if color is None:
+                continue
+            color_arr = np.array(color, copy=True)
+            if color_arr.shape[-1] == 4:
+                color_arr[..., -1] = np.clip(color_arr[..., -1] * opacity, 0, 255)
+            else:
+                color_arr = np.append(color_arr, np.clip(255 * opacity, 0, 255))
+            setattr(material, attr, tuple(int(x) for x in color_arr.tolist()))
+        material.alphaMode = "BLEND"
+    elif isinstance(visual, ColorVisuals):
+        rgba = np.array(visual.vertex_colors[0], copy=True)
+        rgba[..., -1] = np.clip(rgba[..., -1] * opacity, 0, 255)
+        mesh.visual.vertex_colors = rgba
 
 
 def set_spline_points(
