@@ -1,0 +1,11 @@
+{
+    "file_path": "/home/bhung/judo/learning/data/cylinder_push.h5",
+    "obs_timestep_dim": 1,
+    "horizon": 1.0,
+    "batch_size": 128,
+    "shuffle": true,
+    "seed": 192,
+    "out_keys": null,
+    "action_decimation_factor": 2,
+    "prediction_decimation_factor": 1
+}

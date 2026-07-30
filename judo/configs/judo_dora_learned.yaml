@@ -101,11 +101,8 @@ node_definitions:
     init_optimizer: ${optimizer}
     task_registration_cfg: ${custom_tasks}
     optimizer_registration_cfg: ${custom_optimizers}
-    rollout_backend_kwargs: ${rollout_backend_kwargs}
 
 custom_tasks: null
 custom_optimizers: null
 controller_config_overrides: null
 optimizer_config_overrides: null
-rollout_backend_kwargs:
-    experiment_dir: "cylinder_push_rnn/20260730_094834"

@@ -1,0 +1,5 @@
+outs:
+- md5: 69f5827c5da7c6af07521d0931ad0ac7
+  size: 70508
+  hash: md5
+  path: spot_tire_upright3_stats.nc

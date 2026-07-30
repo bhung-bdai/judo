@@ -1,0 +1,28 @@
+{
+    "task": "CylinderPushTask",
+    "dataset_file_path": "learning/data/cylinder_push.h5",
+    "obs_timestep_dim": 1,
+    "batch_size": 128,
+    "gradient_steps": 1000,
+    "lr": 0.001,
+    "max_grad_norm": 1.0,
+    "output_activation": "linear",
+    "device": "cuda",
+    "save_freq": 500,
+    "log_freq": 100,
+    "horizon": 1.0,
+    "task_timestep": 0.02,
+    "action_decimation_factor": 2,
+    "prediction_decimation_factor": 1,
+    "sequential": false,
+    "teacher_forcing": false,
+    "hidden_sizes": [
+        256,
+        256
+    ],
+    "layer_activations": [
+        "relu",
+        "relu"
+    ],
+    "experiment_name": "cylinder_push_mlp"
+}

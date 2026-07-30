@@ -78,6 +78,7 @@ _registered_tasks: Dict[str, TaskRegistration] = {
         simulation_backend="mujoco_hierarchical",
         locomotion_policy_path=str(SPOT_LOCOMOTION_POLICY_PATH),
     ),
+    f"{CylinderPush.name}_learning": TaskRegistration(CylinderPush, CylinderPushConfig, rollout_backend="world_model"),
 }
 
 

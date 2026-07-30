@@ -132,7 +132,7 @@ class MJWarpRolloutBackend(BatchedRolloutBackend):
         x0: np.ndarray,
         controls: np.ndarray,
         last_policy_output: wp.array | None = None,
-    ) -> tuple[np.ndarray, np.ndarray, wp.array | None]:
+    ) -> tuple[np.ndarray, np.ndarray | None, wp.array | None]:
         """Conduct a GPU-accelerated rollout using mujoco_warp.
 
         Supports both single-problem and multi-problem modes:

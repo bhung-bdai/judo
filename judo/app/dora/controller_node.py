@@ -2,7 +2,7 @@
 
 import time
 from threading import Lock
-from typing import Callable
+from typing import Any, Callable
 
 import pyarrow as pa
 from dora_utils.dataclasses import from_event, to_arrow
@@ -25,6 +25,7 @@ class ControllerNode(DoraNode):
         task_registration_cfg: DictConfig | None = None,
         optimizer_registration_cfg: DictConfig | None = None,
         make_controller_fn: Callable | None = None,
+        rollout_backend_kwargs: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the controller node.
 
@@ -37,11 +38,13 @@ class ControllerNode(DoraNode):
             optimizer_registration_cfg: Optional config for optimizer registration overrides.
             make_controller_fn: Optional factory function to create Controller instances.
                 Defaults to judo.controller.make_controller. Allows custom controller creation.
+            rollout_backend_kwargs: Optional keyword arguments for the rollout backend.
         """
         super().__init__(node_id=node_id, max_workers=max_workers)
         self._make_controller_fn = make_controller_fn or make_controller
         self._task_registration_cfg = task_registration_cfg
         self._optimizer_registration_cfg = optimizer_registration_cfg
+        self._rollout_backend_kwargs = rollout_backend_kwargs
         self.controller = self._build_controller(init_task, init_optimizer)
         self._paused = False
         self.write_controls()
@@ -54,6 +57,7 @@ class ControllerNode(DoraNode):
             init_optimizer=optimizer_name,
             task_registration_cfg=self._task_registration_cfg,
             optimizer_registration_cfg=self._optimizer_registration_cfg,
+            rollout_backend_kwargs=self._rollout_backend_kwargs,
         )
 
     def _current_optimizer_name(self) -> str:

@@ -1,0 +1,20 @@
+{
+    "name": "mlp",
+    "input_size": 56,
+    "output_size": 400,
+    "batch_size": 128,
+    "output_activation": "linear",
+    "sequential": false,
+    "device": "cuda",
+    "hidden_sizes": [
+        256,
+        256
+    ],
+    "layer_activations": [
+        "relu",
+        "relu"
+    ],
+    "dropouts": null,
+    "task_timestep": 0.02,
+    "obs_timestep_dim": 1
+}

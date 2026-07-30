@@ -41,7 +41,7 @@ class Visualizer:
         geom_exclude_substring: str = "collision",
         available_tasks: dict[str, TaskRegistration] | None = None,
         ghost_vis: bool = False,
-        ghost_opacity: float = 0.35,
+        ghost_opacity: float = 0.65,
     ) -> None:
         """Initialize the visualization node."""
         # handling custom task and optimizer registration

@@ -37,6 +37,15 @@ def set_default_cylinder_push_overrides() -> None:
             "use_noise_ramp": True,
         },
     )
+    set_config_overrides(
+        "cylinder_push_learning",
+        CrossEntropyMethodConfig,
+        {
+            "num_nodes": 4,
+            "num_rollouts": 32,
+            "use_noise_ramp": True,
+        },
+    )
 
 
 def set_default_cartpole_overrides() -> None:

@@ -23,7 +23,7 @@ class RolloutBackend(ABC):
         x0: np.ndarray,
         controls: np.ndarray,
         last_policy_output: Any = None,
-    ) -> tuple[np.ndarray, np.ndarray, Any]:
+    ) -> tuple[np.ndarray, np.ndarray | None, Any]:
         """Conduct parallel rollouts.
 
         Args:

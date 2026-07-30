@@ -28,7 +28,6 @@ from judo.utils.normalization import (
 )
 from judo.utils.rollout_backend import BatchedRolloutBackend, RolloutBackend
 from judo.utils.timer import Timer
-from judo.utils.world_model_backend import WorldModelRolloutBackend
 from judo.visualizers.utils import get_trace_sensors
 
 RolloutBackendEntry = type[RolloutBackend] | Callable[..., RolloutBackend]
@@ -37,7 +36,6 @@ RolloutBackendEntry = type[RolloutBackend] | Callable[..., RolloutBackend]
 DEFAULT_ROLLOUT_BACKEND_REGISTRY: dict[str, RolloutBackendEntry] = {
     "mujoco": MJRolloutBackend,
     "mujoco_hierarchical": HierarchicalMJRolloutBackend,
-    "world_model": WorldModelRolloutBackend,
 }
 
 
@@ -151,7 +149,7 @@ class Controller:
     @property
     def spline_data(self) -> SplineData:
         """Helper function to get the spline data."""
-        return SplineData(self.times, self.nominal_knots, kind=self.spline_order)
+        return SplineData(self.times, self.nominal_knots)
 
     @property
     def action_normalizer_type(self) -> NormalizerType:
@@ -231,12 +229,9 @@ class Controller:
         For batched multi-controller optimization, use BatchedControllers instead.
         """
         self._pre_optimization()
-        # print(self.sensors.shape)
 
         # run optimization loop
         i = 0
-        # print(f"Before optimization: {self.rollout_controls}")
-        # prior_rollout_controls = self.rollout_controls
         while i < self.max_opt_iters and not self.optimizer.stop_cond():
             self.rollout_controls = self._sample_controls()
             self._pre_rollout()
@@ -250,17 +245,13 @@ class Controller:
                 sim_controls,
                 self._last_policy_output,
             )
-            # print(self.states[0, :, :4])
             if policy_output is not None:
                 self._last_policy_output = policy_output
 
             self._post_rollout()
             self._update_iteration()
             i += 1
-        
-        # print(f"After optimization: {self.rollout_controls}")
-        # print(f"Controls diff: {np.linalg.norm(prior_rollout_controls - self.rollout_controls)}")
-        # print(f"After optimization rollout controls: {self.rollout_controls}")
+
         self._post_optimization()
 
     def _pre_optimization(self) -> None:

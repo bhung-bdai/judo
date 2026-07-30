@@ -38,7 +38,7 @@ class MJSimulation(Simulation):
         if self.paused:
             return
 
-        command = self.task.task_to_sim_ctrl(command)
+        command = self.task.task_to_sim_ctrl(command)    
         self.task.data.ctrl[:] = command[: self.task.model.nu]
         self.task.pre_sim_step()
         mj_step(self.task.sim_model, self.task.data)

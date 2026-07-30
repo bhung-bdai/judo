@@ -3,10 +3,12 @@
 from judo.simulation.base import Simulation
 from judo.simulation.hierarchical_mj_simulation import HierarchicalMJSimulation
 from judo.simulation.mj_simulation import MJSimulation
+from judo.simulation.learned_simulation import LearnedSimulation
 
 DEFAULT_SIMULATION_BACKEND_REGISTRY: dict[str, type[Simulation]] = {
     "mujoco": MJSimulation,
     "mujoco_hierarchical": HierarchicalMJSimulation,
+    "learned": LearnedSimulation,
 }
 
 
@@ -28,6 +30,7 @@ __all__ = [
     "Simulation",
     "MJSimulation",
     "HierarchicalMJSimulation",
+    "LearnedSimulation",
     "DEFAULT_SIMULATION_BACKEND_REGISTRY",
     "get_simulation_backend",
 ]

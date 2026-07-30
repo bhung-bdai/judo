@@ -1,0 +1,13 @@
+{
+    "name": "rnn",
+    "input_size": 8,
+    "output_size": 8,
+    "batch_size": 128,
+    "output_activation": "linear",
+    "sequential": true,
+    "device": "cuda",
+    "gru_hidden_size": 256,
+    "gru_num_layers": 2,
+    "init_input_size": 8,
+    "step_input_size": 8
+}

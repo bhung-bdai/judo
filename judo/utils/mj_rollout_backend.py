@@ -47,7 +47,7 @@ class MJRolloutBackend(RolloutBackend):
         x0: np.ndarray,
         controls: np.ndarray,
         last_policy_output: np.ndarray | None = None,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+    ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
         """Conduct parallel rollouts.
 
         Args:

@@ -31,6 +31,8 @@ class VisualizationNode(DoraNode):
         sim_pause_button: bool = True,
         geom_exclude_substring: str = "collision",
         available_tasks: dict[str, TaskRegistration] | None = None,
+        ghost_vis: bool = False,
+        ghost_opacity: float = 0.35,
     ) -> None:
         """Initialize the visualization node (Viser web GUI for task/optimizer control).
 
@@ -59,6 +61,8 @@ class VisualizationNode(DoraNode):
             sim_pause_button=sim_pause_button,
             geom_exclude_substring=geom_exclude_substring,
             available_tasks=available_tasks,
+            ghost_vis=ghost_vis,
+            ghost_opacity=ghost_opacity,
         )
 
     def write_sim_pause(self) -> None:
@@ -103,6 +107,18 @@ class VisualizationNode(DoraNode):
             self.node.send_output("task_config", *to_arrow(self.visualizer.task_config))
         self.visualizer.task_config_updated.clear()
 
+    @on_event("INPUT", "ghost_pose")
+    def update_ghost_pose(self, event: dict) -> None:
+        """Callback to update ghost pose on receiving a new ghost pose measurement."""
+        ghost_pose_msg = from_arrow(event["value"], event["metadata"], RenderPose)
+        with self.visualizer.task_lock:
+            if self.visualizer.ghost_data is not None and self.visualizer.ghost_model is not None:
+                self.visualizer.ghost_data.xpos[:] = ghost_pose_msg.xpos
+                self.visualizer.ghost_data.xquat[:] = ghost_pose_msg.xquat
+                self.visualizer.ghost_model.set_data(self.visualizer.ghost_data)
+            else:
+                warnings.warn("Ghost data or ghost model is not initialized. Skipping ghost pose update.")
+
     @on_event("INPUT", "render_pose")
     def update_states(self, event: dict) -> None:
         """Callback to update states on receiving a new state measurement."""
@@ -120,6 +136,7 @@ class VisualizationNode(DoraNode):
                 self.visualizer.data.xpos[:] = render_pose_msg.xpos
                 self.visualizer.data.xquat[:] = render_pose_msg.xquat
                 self.visualizer.viser_model.set_data(self.visualizer.data)
+            self.visualizer.data
         except ValueError:
             # we're switching tasks and the new task has a different number of xpos/xquat
             return
